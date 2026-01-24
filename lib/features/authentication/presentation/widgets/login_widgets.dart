@@ -12,7 +12,14 @@ class WelcomeSection extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        const Icon(Icons.recycling, color: Color(0xFF2E7D32), size: 50),
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: const Color(0xFF2E7D32).withOpacity(0.1),
+            shape: BoxShape.circle,
+          ),
+          child: const Icon(Icons.recycling, color: Color(0xFF2E7D32), size: 50),
+        ),
         const SizedBox(height: 24),
         RichText(
           textAlign: TextAlign.center,
