@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "450616563119",
+    "project_id": "project-isort",
+    "storage_bucket": "project-isort.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:450616563119:android:9acf69d3057b0e3edbcb5a",
+        "android_client_info": {
+          "package_name": "isla.cluster.c.i_sort"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBilN0Sld8wXqzks3wINP47-gGRHO62NFE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
