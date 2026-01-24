@@ -58,15 +58,21 @@ class _LoginFormState extends State<LoginForm> {
   final _passwordController = TextEditingController();
   final _authService = AuthService();
   bool _isLoading = false;
+  bool _obscurePassword = true;
 
   void _signIn() async {
     if (_emailController.text.isEmpty || _passwordController.text.isEmpty) return;
     setState(() => _isLoading = true);
-    await _authService.signInWithEmailAndPassword(
+    final error = await _authService.signInWithEmailAndPassword(
       _emailController.text,
       _passwordController.text,
     );
     setState(() => _isLoading = false);
+    if (error != null && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(error)),
+      );
+    }
   }
 
   @override
@@ -92,14 +98,24 @@ class _LoginFormState extends State<LoginForm> {
         const SizedBox(height: 16),
         TextFormField(
           controller: _passwordController,
-          obscureText: true,
+          obscureText: _obscurePassword,
           decoration: InputDecoration(
             filled: true,
             fillColor: Colors.grey[100],
             hintText: 'Password',
             hintStyle: TextStyle(color: Colors.grey[400]),
             prefixIcon: Icon(Icons.lock_outline, color: Colors.grey[400]),
-            suffixIcon: Icon(Icons.visibility_off_outlined, color: Colors.grey[400]),
+            suffixIcon: IconButton(
+              icon: Icon(
+                _obscurePassword ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+                color: Colors.grey[400],
+              ),
+              onPressed: () {
+                setState(() {
+                  _obscurePassword = !_obscurePassword;
+                });
+              },
+            ),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(30),
               borderSide: BorderSide.none,

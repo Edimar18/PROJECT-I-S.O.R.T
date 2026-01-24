@@ -2,8 +2,8 @@
 import 'package:flutter/material.dart';
 import 'package:i_sort/features/authentication/services/auth_service.dart';
 
-class HomeScreen extends StatelessWidget {
-  const HomeScreen({super.key});
+class AppHomeScreen extends StatelessWidget {
+  const AppHomeScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -19,7 +19,7 @@ class HomeScreen extends StatelessWidget {
         ],
       ),
       body: const Center(
-        child: Text('Welcome, Higala!'),
+        child: Text('Welcome, Eco-Warrior!'),
       ),
     );
   }
