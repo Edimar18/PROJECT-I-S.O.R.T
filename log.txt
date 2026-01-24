@@ -1,0 +1,14 @@
+LOG: 
+
+- Created directory `lib/features/home` for the home screen files.
+- Created `home_screen.dart` with the basic layout for the home screen.
+- Created `home_widgets.dart` to store the widgets for the home screen.
+- Updated `main.dart` to display the `HomeScreen`.
+- Added necessary image assets to `assets/images` and updated pubspec.yaml accordingly.
+- Updated `home_screen.dart` to include a `Stack` layout with a background image, a gradient overlay, and a `SafeArea`.
+- The main content in `home_screen.dart` now features a white, rounded container with a box shadow, creating a card effect for the login form.
+- Updated `home_widgets.dart` to refine UI elements:
+    - Used `RichText` to style "Welcome Back, Eco-Warrior" with two different colors.
+    - Adjusted text fields, buttons, and text styles to more closely match the design screenshot.
+    - Refined the `OfficialPartnerSection` with a circular logo container and updated text styling.
+    - Applied a fading effect to the background image via a `LinearGradient` overlay.
