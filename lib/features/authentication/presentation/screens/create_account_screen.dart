@@ -27,6 +27,7 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
   String? _selectedBarangay;
   List<String> _barangays = [];
   bool _isLoading = false;
+  bool _isBarangaysLoading = false;
   bool _obscurePassword = true;
   DateTime? _selectedDate;
 
@@ -37,10 +38,14 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
   }
 
   Future<void> _loadBarangays() async {
+    setState(() => _isBarangaysLoading = true);
     final barangays = await _firestoreService.getBarangays();
-    setState(() {
-      _barangays = barangays;
-    });
+    if (mounted) {
+      setState(() {
+        _barangays = barangays;
+        _isBarangaysLoading = false;
+      });
+    }
   }
 
   void _createAccount() async {
@@ -186,12 +191,36 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
   }
 
   Widget _buildDropdown() {
+    if (_isBarangaysLoading) {
+      return TextFormField(
+        readOnly: true,
+        decoration: _inputDecoration('Address (Barangay)', Icons.home_outlined).copyWith(
+          hintText: 'Loading addresses...',
+          suffixIcon: const Padding(
+            padding: EdgeInsets.only(right: 12.0),
+            child: SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2)),
+          ),
+        ),
+      );
+    }
+
     return DropdownButtonFormField<String>(
       decoration: _inputDecoration('Address (Barangay)', Icons.home_outlined),
       value: _selectedBarangay,
-      items: _barangays.map((barangay) => DropdownMenuItem(value: barangay, child: Text(barangay))).toList(),
-      onChanged: (value) => setState(() => _selectedBarangay = value),
+      isExpanded: true,
+      items: _barangays.map((String value) {
+        return DropdownMenuItem<String>(
+          value: value,
+          child: Text(value),
+        );
+      }).toList(),
+      onChanged: _barangays.isEmpty ? null : (String? newValue) {
+        setState(() {
+          _selectedBarangay = newValue;
+        });
+      },
       validator: (value) => value == null ? 'Please select your barangay' : null,
+      disabledHint: _barangays.isEmpty ? const Text('Could not load addresses') : null,
     );
   }
 
