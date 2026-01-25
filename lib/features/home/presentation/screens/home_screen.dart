@@ -4,6 +4,7 @@ import 'package:i_sort/features/home/presentation/screens/tabs/dashboard_screen.
 import 'package:i_sort/features/home/presentation/screens/tabs/scan_screen.dart';
 import 'package:i_sort/features/home/presentation/screens/tabs/profile_screen.dart';
 import 'package:i_sort/features/home/presentation/screens/tabs/stats_screen.dart';
+import 'package:i_sort/features/user/services/user_service.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -14,6 +15,13 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   int _selectedIndex = 0;
+  final UserService _userService = UserService();
+
+  @override
+  void initState() {
+    super.initState();
+    _userService.checkAndResetDailyData();
+  }
 
   static const List<Widget> _widgetOptions = <Widget>[
     DashboardScreen(),
@@ -57,7 +65,7 @@ class _HomeScreenState extends State<HomeScreen> {
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: <Widget>[
           _buildNavItem(icon: Icons.home_filled, index: 0, label: 'Home'),
-          _buildNavItem(icon: Icons.camera_alt_outlined, index: 1, label: 'Scan'),
+          _buildNavItem(icon: Icons.camera_alt_outlined, index: 1, label: 'Map'),
           const SizedBox(width: 48), // The space for the FAB
           _buildNavItem(icon: Icons.bar_chart_outlined, index: 3, label: 'Stats'),
           _buildNavItem(icon: Icons.person_outline, index: 4, label: 'Profile'),

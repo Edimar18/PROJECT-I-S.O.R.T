@@ -12,3 +12,35 @@ LOG:
     - Adjusted text fields, buttons, and text styles to more closely match the design screenshot.
     - Refined the `OfficialPartnerSection` with a circular logo container and updated text styling.
     - Applied a fading effect to the background image via a `LinearGradient` overlay.
+
+- Refactored and modularized the authentication feature:
+    - Renamed `home_screen.dart` to `login_screen.dart` and `home_widgets.dart` to `login_widgets.dart`.
+    - Created a new `home_screen.dart` to serve as the main screen after login.
+    - Removed back arrow navigation from `CreateAccountScreen` and `ForgotPasswordScreen` for better UX.
+
+- Enhanced user feedback and interaction:
+    - Implemented password visibility toggles on password fields.
+    - Added friendly error messages and success notifications using `SnackBar` for all authentication actions (login, signup, password reset).
+
+- Expanded user profile and data handling:
+    - Added new fields to the signup screen: nickname, date of birth, age (auto-calculated), address (dropdown from Firestore), and contact number.
+    - Created `FirestoreService` to fetch the list of barangays for the address dropdown.
+    - Updated `AuthService` to save all user data to a `users` collection in Firestore upon account creation.
+    - Added the `intl` package for date formatting.
+    - Improved the address dropdown with a loading indicator and error handling.
+
+- Redesigned the main dashboard:
+    - Replaced the old `HomeScreen` with a new design featuring a bottom navigation bar.
+    - Created placeholder screens for the Map, Stats, and Profile tabs.
+    - Implemented the dashboard UI with a dynamic greeting, a daily points cap, a horizontally scrollable list of waste categories, and a recent activity feed.
+    - The recent activity feed now dynamically loads data from the user's `todaysActivityLog` in Firestore.
+
+- Implemented core application logic:
+    - Added a `UserService` to handle daily data resets. `currentPoints` and all `currentDayScanned...` fields are now automatically reset to zero at the start of each new day.
+    - Added `rank` and `lastUpdate` fields to the user data model to support the daily reset and future ranking features.
+    - Enabled Firestore's offline persistence to allow the app to function with cached data when offline.
+
+- Addressed and fixed various issues:
+    - Resolved multiple `RenderFlex` overflow errors by adjusting layout and spacing.
+    - Fixed a `_TypeError` caused by incorrect data parsing from Firestore.
+    - Corrected a build error by escaping a string in the dashboard UI.

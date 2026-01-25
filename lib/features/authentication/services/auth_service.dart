@@ -55,6 +55,8 @@ class AuthService {
           'currentDayScannedGlass': 0.0,
           'currentDayScannedTrash': 0.0,
           'todaysActivityLog': [],
+          'rank': 'Beginner', // Add rank field
+          'lastUpdate': FieldValue.serverTimestamp(), // Add lastUpdate timestamp
         });
       }
       return null; // Success
