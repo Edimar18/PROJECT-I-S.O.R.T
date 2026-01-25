@@ -48,7 +48,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                   Colors.white.withOpacity(0.5),
                   Colors.white.withOpacity(0.9),
                 ],
-                stops: const [0.4, 0.7, 1.0],
+                stops: const [0.15, 0.5, 1.0],
               ),
             ),
           ),

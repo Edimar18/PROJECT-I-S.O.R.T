@@ -1,8 +1,11 @@
 
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:i_sort/features/data/services/firestore_service.dart';
 
 class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
+  final FirestoreService _firestoreService = FirestoreService();
 
   Stream<User?> get authStateChanges => _auth.authStateChanges();
 
@@ -18,9 +21,39 @@ class AuthService {
     }
   }
 
-  Future<String?> createUserWithEmailAndPassword(String email, String password) async {
+  Future<String?> createUserWithEmailAndPassword({
+    required String email,
+    required String password,
+    required String nickname,
+    required DateTime dateOfBirth,
+    required String address,
+    required String contactNumber,
+  }) async {
     try {
-      await _auth.createUserWithEmailAndPassword(email: email, password: password);
+      final UserCredential userCredential = await _auth.createUserWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
+      final User? user = userCredential.user;
+      if (user != null) {
+        final int age = DateTime.now().difference(dateOfBirth).inDays ~/ 365;
+        await _firestoreService.createUserDocument(user.uid, {
+          'nickname': nickname,
+          'email': email,
+          'dateOfBirth': Timestamp.fromDate(dateOfBirth),
+          'age': age,
+          'address': address,
+          'contactNumber': contactNumber,
+          'timeCreated': FieldValue.serverTimestamp(),
+          'currentPoints': 0,
+          'totalPoints': 0,
+          'totalWasteScanned': 0,
+          'currentDayScannedPapers': 0,
+          'currentDayScannedPlastics': 0,
+          'currentDayScannedMetals': 0,
+          'todaysActivityLog': [],
+        });
+      }
       return null; // Success
     } on FirebaseAuthException catch (e) {
       if (e.code == 'email-already-in-use') {
