@@ -26,15 +26,14 @@ class _HomeScreenState extends State<HomeScreen> {
   static const List<Widget> _widgetOptions = <Widget>[
     DashboardScreen(),
     ScanScreen(),
-    // A placeholder for the scan button, which won't be a screen
-    SizedBox.shrink(), 
+    SizedBox.shrink(), // Placeholder for the center scan button
     StatsScreen(),
     ProfileScreen(),
   ];
 
   void _onItemTapped(int index) {
-    if (index == 2) { // The scan button
-      // Handle scan action
+    if (index == 2) { // The scan button index, which we ignore for tab selection
+      // The actual scan action is handled by the FloatingActionButton
       return;
     }
     setState(() {
@@ -48,8 +47,11 @@ class _HomeScreenState extends State<HomeScreen> {
       body: _widgetOptions.elementAt(_selectedIndex),
       bottomNavigationBar: _buildBottomNavigationBar(),
       floatingActionButton: FloatingActionButton(
-        onPressed: () { /* Handle scan action */ },
+        onPressed: () {
+          // TODO: Implement Scan Action
+        },
         backgroundColor: const Color(0xFF1de9b6),
+        elevation: 2.0,
         shape: const CircleBorder(),
         child: const Icon(Icons.qr_code_scanner, color: Colors.white),
       ),
@@ -65,7 +67,7 @@ class _HomeScreenState extends State<HomeScreen> {
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: <Widget>[
           _buildNavItem(icon: Icons.home_filled, index: 0, label: 'Home'),
-          _buildNavItem(icon: Icons.camera_alt_outlined, index: 1, label: 'Map'),
+          _buildNavItem(icon: Icons.camera_alt_outlined, index: 1, label: 'Scan'),
           const SizedBox(width: 48), // The space for the FAB
           _buildNavItem(icon: Icons.bar_chart_outlined, index: 3, label: 'Stats'),
           _buildNavItem(icon: Icons.person_outline, index: 4, label: 'Profile'),
