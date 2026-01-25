@@ -60,6 +60,14 @@ class DashboardScreen extends StatelessWidget {
     return 'Good Evening';
   }
 
+  String _formatTotalScore(double score) {
+    final int scoreInt = score.toInt();
+    if (scoreInt >= 10000) {
+      return '${(scoreInt / 1000).floor()}k+';
+    }
+    return scoreInt.toString();
+  }
+
   Widget _buildHeader(String nickname, double totalPoints) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -91,7 +99,7 @@ class DashboardScreen extends StatelessWidget {
             children: [
               const Icon(Icons.check_circle, color: Color(0xFF1de9b6), size: 18),
               const SizedBox(width: 6),
-              Text('TOTAL SCORE: ${totalPoints.toInt()}', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
+              Text('TOTAL SCORE: ${_formatTotalScore(totalPoints)}', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
             ],
           ),
         ),
