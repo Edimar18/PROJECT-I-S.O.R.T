@@ -37,9 +37,7 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Center(
-        child: _widgetOptions.elementAt(_selectedIndex),
-      ),
+      body: _widgetOptions.elementAt(_selectedIndex),
       bottomNavigationBar: _buildBottomNavigationBar(),
       floatingActionButton: FloatingActionButton(
         onPressed: () { /* Handle scan action */ },

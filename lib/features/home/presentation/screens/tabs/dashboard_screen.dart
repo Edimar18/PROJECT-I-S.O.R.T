@@ -2,6 +2,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 
 class DashboardScreen extends StatelessWidget {
   const DashboardScreen({super.key});
@@ -169,7 +170,7 @@ class DashboardScreen extends StatelessWidget {
     };
 
     return SizedBox(
-      height: 120,
+      height: 110, // Reduced height to prevent overflow
       child: ListView( 
         scrollDirection: Axis.horizontal,       
         children: categories.entries.map((entry) {
@@ -177,7 +178,7 @@ class DashboardScreen extends StatelessWidget {
           return Container(
             width: 100,
             margin: const EdgeInsets.only(right: 12),
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(12), // Reduced padding
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(20),
@@ -194,9 +195,9 @@ class DashboardScreen extends StatelessWidget {
                   ),
                   child: Icon(entry.value['icon'] as IconData, color: color, size: 20),
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: 8), // Reduced spacing
                 Text(entry.key, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
-                const SizedBox(height: 4),
+                const SizedBox(height: 2), // Reduced spacing
                 Text('${(entry.value['value'] as double).toStringAsFixed(1)}kg', style: const TextStyle(color: Colors.grey, fontSize: 12)),
               ],
             ),
@@ -206,13 +207,44 @@ class DashboardScreen extends StatelessWidget {
     );
   }
 
+  String _formatTimestamp(Timestamp timestamp) {
+    final now = DateTime.now();
+    final difference = now.difference(timestamp.toDate());
+
+    if (difference.inSeconds < 60) {
+      return '${difference.inSeconds} secs ago';
+    } else if (difference.inMinutes < 60) {
+      return '${difference.inMinutes} mins ago';
+    } else if (difference.inHours < 24) {
+      return '${difference.inHours} hours ago';
+    } else {
+      return DateFormat('MMM d').format(timestamp.toDate());
+    }
+  }
+
+  Map<String, dynamic> _getActivityIconAndColor(String description) {
+    if (description.toLowerCase().contains('plastic')) {
+      return {'icon': Icons.local_drink, 'color': Colors.blueAccent};
+    } else if (description.toLowerCase().contains('paper')) {
+      return {'icon': Icons.article, 'color': Colors.greenAccent};
+    } else if (description.toLowerCase().contains('metal')) {
+      return {'icon': Icons.build, 'color': Colors.orangeAccent};
+    } else if (description.toLowerCase().contains('challenge')) {
+      return {'icon': Icons.emoji_events, 'color': Colors.orangeAccent};
+    }
+    return {'icon': Icons.recycling, 'color': Colors.green};
+  }
+
   Widget _buildRecentActivity(List<dynamic> activities) {
-    // Dummy data for UI design
-    final dummyActivities = [
-      {'description': 'Recycled PET Bottles', 'details': 'Smart Bin #4 • 2 mins ago', 'points': 2, 'icon': Icons.recycling, 'color': Colors.green},
-      {'description': 'Scanned Smart Bin', 'details': 'Poblacion Area • 1 hour ago', 'points': 5, 'icon': Icons.qr_code_scanner, 'color': Colors.blueAccent},
-      {'description': 'Weekly Challenge', 'details': 'Completed • Yesterday', 'points': 10, 'icon': Icons.emoji_events, 'color': Colors.orangeAccent},
-    ];
+    final List<List<dynamic>> recentActivities;
+
+    if (activities.isNotEmpty && activities[0] is! List) {
+      recentActivities = [activities];
+    } else {
+      recentActivities = List<List<dynamic>>.from(activities);
+    }
+
+    final latestActivities = (recentActivities.reversed).toList().take(3).toList();
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -225,15 +257,24 @@ class DashboardScreen extends StatelessWidget {
           ],
         ),
         const SizedBox(height: 12),
-        dummyActivities.isEmpty
-            ? const Text('No recent activity.')
+        latestActivities.isEmpty
+            ? const Center(child: Padding(
+                padding: EdgeInsets.all(20.0),
+                child: Text('No recent activity today.', style: TextStyle(color: Colors.grey)),
+              ))
             : ListView.builder(
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
-                itemCount: dummyActivities.length,
+                itemCount: latestActivities.length,
                 itemBuilder: (context, index) {
-                  final activity = dummyActivities[index];
-                  final color = activity['color'] as Color;
+                  final activity = latestActivities[index];
+                  final String description = activity[0] as String;
+                  final Timestamp timestamp = activity[1] as Timestamp;
+                  final int points = activity[2] as int;
+                  final iconAndColor = _getActivityIconAndColor(description);
+                  final color = iconAndColor['color'] as Color;
+                  final icon = iconAndColor['icon'] as IconData;
+
                   return Container(
                     margin: const EdgeInsets.only(bottom: 10),
                     padding: const EdgeInsets.all(12),
@@ -253,15 +294,15 @@ class DashboardScreen extends StatelessWidget {
                                 color: color.withOpacity(0.1),
                                 shape: BoxShape.circle,
                               ),
-                              child: Icon(activity['icon'] as IconData, color: color, size: 20),
+                              child: Icon(icon, color: color, size: 20),
                             ),
                             const SizedBox(width: 12),
                             Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text(activity['description'] as String, style: const TextStyle(fontWeight: FontWeight.bold)),
+                                Text(description, style: const TextStyle(fontWeight: FontWeight.bold)),
                                 const SizedBox(height: 4),
-                                Text(activity['details'] as String, style: const TextStyle(color: Colors.grey, fontSize: 12)),
+                                Text(_formatTimestamp(timestamp), style: const TextStyle(color: Colors.grey, fontSize: 12)),
                               ],
                             ),
                           ],
@@ -272,7 +313,7 @@ class DashboardScreen extends StatelessWidget {
                             color: color.withOpacity(0.1),
                             borderRadius: BorderRadius.circular(10),
                           ),
-                          child: Text('+${activity['points']} pts', style: TextStyle(color: color, fontWeight: FontWeight.bold, fontSize: 12)),
+                          child: Text('+$points pts', style: TextStyle(color: color, fontWeight: FontWeight.bold, fontSize: 12)),
                         ),
                       ],
                     ),
