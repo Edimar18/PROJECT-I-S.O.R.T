@@ -141,7 +141,17 @@ class DashboardScreen extends StatelessWidget {
                         ],
                       ),
                       const SizedBox(height: 8),
-                      Text('${(dailyCap - dailyPoints).toInt()} pts to goal!', style: const TextStyle(color: Color(0xFF1de9b6), fontWeight: FontWeight.bold, fontSize: 12)),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF1de9b6).withOpacity(0.15),
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Text(
+                          '${(dailyCap - dailyPoints).toInt()} pts to goal!',
+                          style: const TextStyle(color: Color(0xFF1de9b6), fontWeight: FontWeight.bold, fontSize: 12),
+                        ),
+                      ),
                     ],
                   ),
                 ),
