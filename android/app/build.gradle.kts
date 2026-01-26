@@ -21,7 +21,7 @@ android {
 
     defaultConfig {
         applicationId = "isla.cluster.c.i_sort"
-        minSdk = 21
+        minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName

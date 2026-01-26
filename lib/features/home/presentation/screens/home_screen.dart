@@ -1,5 +1,6 @@
 
 import 'package:flutter/material.dart';
+import 'package:i_sort/features/home/presentation/screens/qr_scanner_screen.dart';
 import 'package:i_sort/features/home/presentation/screens/tabs/dashboard_screen.dart';
 import 'package:i_sort/features/home/presentation/screens/tabs/scan_screen.dart';
 import 'package:i_sort/features/home/presentation/screens/tabs/profile_screen.dart';
@@ -23,19 +24,15 @@ class _HomeScreenState extends State<HomeScreen> {
     _userService.checkAndResetDailyData();
   }
 
-  static const List<Widget> _widgetOptions = <Widget>[
-    DashboardScreen(),
-    ScanScreen(),
-    SizedBox.shrink(), // Placeholder for the center scan button
-    StatsScreen(),
-    ProfileScreen(),
+  // Simplified the list of screens. The placeholder is no longer needed.
+  static const List<Widget> _screens = <Widget>[
+    DashboardScreen(), // Index 0
+    ScanScreen(),      // Index 1
+    StatsScreen(),     // Index 2
+    ProfileScreen(),   // Index 3
   ];
 
   void _onItemTapped(int index) {
-    if (index == 2) { // The scan button index, which we ignore for tab selection
-      // The actual scan action is handled by the FloatingActionButton
-      return;
-    }
     setState(() {
       _selectedIndex = index;
     });
@@ -44,11 +41,12 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: _widgetOptions.elementAt(_selectedIndex),
+      // This now correctly selects the screen based on the index.
+      body: _screens[_selectedIndex],
       bottomNavigationBar: _buildBottomNavigationBar(),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          // TODO: Implement Scan Action
+          Navigator.push(context, MaterialPageRoute(builder: (context) => const QrScannerScreen()));
         },
         backgroundColor: const Color(0xFF1de9b6),
         elevation: 2.0,
@@ -69,8 +67,9 @@ class _HomeScreenState extends State<HomeScreen> {
           _buildNavItem(icon: Icons.home_filled, index: 0, label: 'Home'),
           _buildNavItem(icon: Icons.camera_alt_outlined, index: 1, label: 'Scan'),
           const SizedBox(width: 48), // The space for the FAB
-          _buildNavItem(icon: Icons.bar_chart_outlined, index: 3, label: 'Stats'),
-          _buildNavItem(icon: Icons.person_outline, index: 4, label: 'Profile'),
+          // Corrected the indices for Stats and Profile
+          _buildNavItem(icon: Icons.bar_chart_outlined, index: 2, label: 'Stats'),
+          _buildNavItem(icon: Icons.person_outline, index: 3, label: 'Profile'),
         ],
       ),
     );
@@ -78,10 +77,17 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _buildNavItem({required IconData icon, required int index, required String label}) {
     final isSelected = _selectedIndex == index;
-    return IconButton(
-      icon: Icon(icon, color: isSelected ? const Color(0xFF1de9b6) : Colors.grey),
-      onPressed: () => _onItemTapped(index),
-      tooltip: label,
+    return InkWell(
+      onTap: () => _onItemTapped(index),
+      borderRadius: BorderRadius.circular(30),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(icon, color: isSelected ? const Color(0xFF1de9b6) : Colors.grey),
+          Text(label, style: TextStyle(color: isSelected ? const Color(0xFF1de9b6) : Colors.grey, fontSize: 12)),
+        ],
+      ),
     );
   }
 }
