@@ -1,4 +1,5 @@
 
+import 'dart:io';
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -13,6 +14,7 @@ class ScanScreen extends StatefulWidget {
 class _ScanScreenState extends State<ScanScreen> {
   CameraController? _controller;
   Future<void>? _initializeControllerFuture;
+  XFile? _capturedImage;
   bool _isFlashOn = false;
 
   @override
@@ -32,7 +34,6 @@ class _ScanScreenState extends State<ScanScreen> {
           ResolutionPreset.high,
           enableAudio: false,
         );
-        // In order to update the UI, we need to call setState after the controller is initialized
         return _controller!.initialize().then((_) {
           if (!mounted) {
             return;
@@ -78,7 +79,7 @@ class _ScanScreenState extends State<ScanScreen> {
       context: context,
       builder: (BuildContext context) {
         return Dialog(
-          backgroundColor: Colors.white.withOpacity(0.9),
+          backgroundColor: Colors.white.withOpacity(0.85),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(20),
           ),
@@ -148,6 +149,9 @@ class _ScanScreenState extends State<ScanScreen> {
                 ElevatedButton.icon(
                   onPressed: () {
                     Navigator.of(context).pop();
+                    setState(() {
+                      _capturedImage = null;
+                    });
                   },
                   icon: const Icon(Icons.refresh),
                   label: const Text('Scan Again'),
@@ -240,9 +244,13 @@ class _ScanScreenState extends State<ScanScreen> {
             if (_controller != null && _controller!.value.isInitialized) {
               return Stack(
                 children: [
-                  SizedBox.expand(
-                    child: CameraPreview(_controller!),
-                  ),
+                  _capturedImage == null
+                      ? SizedBox.expand(
+                          child: CameraPreview(_controller!),
+                        )
+                      : SizedBox.expand(
+                          child: Image.file(File(_capturedImage!.path)),
+                        ),
                   Positioned(
                     top: 50,
                     left: 20,
@@ -251,9 +259,7 @@ class _ScanScreenState extends State<ScanScreen> {
                       child: IconButton(
                         icon: const Icon(Icons.close, color: Colors.white),
                         onPressed: () {
-                          if (Navigator.canPop(context)) {
-                            Navigator.pop(context);
-                          }
+                          Navigator.of(context).popUntil((route) => route.isFirst);
                         },
                       ),
                     ),
@@ -290,34 +296,37 @@ class _ScanScreenState extends State<ScanScreen> {
                                   letterSpacing: 1.5)),
                         ],
                       )),
-                  Positioned(
-                    bottom: 50,
-                    left: 0,
-                    right: 0,
-                    child: GestureDetector(
-                      onTap: () async {
-                        if (_controller == null ||
-                            !_controller!.value.isInitialized) {
-                          return;
-                        }
-                        try {
-                          await _controller!.takePicture();
-                          if (!mounted) return;
-                          _showDetectionDialog();
-                        } catch (e) {
-                          print(e);
-                        }
-                      },
-                      child: Container(
-                        width: 80,
-                        height: 80,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          border: Border.all(color: Colors.white, width: 6),
+                  if (_capturedImage == null)
+                    Positioned(
+                      bottom: 50,
+                      left: 0,
+                      right: 0,
+                      child: GestureDetector(
+                        onTap: () async {
+                          if (_controller == null ||
+                              !_controller!.value.isInitialized) {
+                            return;
+                          }
+                          try {
+                            final image = await _controller!.takePicture();
+                            setState(() {
+                              _capturedImage = image;
+                            });
+                            _showDetectionDialog();
+                          } catch (e) {
+                            print(e);
+                          }
+                        },
+                        child: Container(
+                          width: 80,
+                          height: 80,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            border: Border.all(color: Colors.white, width: 6),
+                          ),
                         ),
                       ),
                     ),
-                  ),
                 ],
               );
             } else {
