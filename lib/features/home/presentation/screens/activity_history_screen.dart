@@ -226,7 +226,7 @@ class ActivityHistoryScreen extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: const Color(0xFF1de9b6).withOpacity(0.1),
+                color: const Color(0xFF1de9b6).withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(15),
               ),
               child: Row(
@@ -263,7 +263,7 @@ class ActivityHistoryScreen extends StatelessWidget {
         Container(
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
-            color: color.withOpacity(0.1),
+            color: color.withValues(alpha: 0.1),
             shape: BoxShape.circle,
           ),
           child: Icon(icon, color: color, size: 24),
@@ -343,7 +343,7 @@ class ActivityHistoryScreen extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: color.withOpacity(0.1),
+              color: color.withValues(alpha: 0.1),
               shape: BoxShape.circle,
             ),
             child: Icon(icon, color: color, size: 24),
@@ -392,7 +392,7 @@ class ActivityHistoryScreen extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
             decoration: BoxDecoration(
-              color: color.withOpacity(0.1),
+              color: color.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Text(

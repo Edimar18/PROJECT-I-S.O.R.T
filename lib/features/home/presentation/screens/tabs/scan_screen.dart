@@ -150,7 +150,7 @@ class _ScanScreenState extends State<ScanScreen> {
       barrierDismissible: false,
       builder: (BuildContext context) {
         return Dialog(
-          backgroundColor: Colors.white.withOpacity(0.95),
+          backgroundColor: Colors.white.withValues(alpha: 0.95),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(20),
           ),
@@ -215,7 +215,7 @@ class _ScanScreenState extends State<ScanScreen> {
                   Container(
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: Colors.blue.withOpacity(0.1),
+                      color: Colors.blue.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(15),
                     ),
                     child: Row(
@@ -375,7 +375,7 @@ class _ScanScreenState extends State<ScanScreen> {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Colors.teal.withOpacity(0.1),
+        color: Colors.teal.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(15),
       ),
       child: Icon(iconData, color: Colors.teal, size: 35),
@@ -387,7 +387,7 @@ class _ScanScreenState extends State<ScanScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
       decoration: BoxDecoration(
-        color: Colors.grey.withOpacity(0.15),
+        color: Colors.grey.withValues(alpha: 0.15),
         borderRadius: BorderRadius.circular(30),
       ),
       child: Column(
@@ -486,7 +486,7 @@ class _ScanScreenState extends State<ScanScreen> {
                     top: 50,
                     left: 20,
                     child: CircleAvatar(
-                      backgroundColor: Colors.black.withOpacity(0.5),
+                      backgroundColor: Colors.black.withValues(alpha: 0.5),
                       child: IconButton(
                         icon: const Icon(Icons.close, color: Colors.white),
                         onPressed: () {
@@ -502,7 +502,7 @@ class _ScanScreenState extends State<ScanScreen> {
                       top: 50,
                       right: 20,
                       child: CircleAvatar(
-                        backgroundColor: Colors.black.withOpacity(0.5),
+                        backgroundColor: Colors.black.withValues(alpha: 0.5),
                         child: IconButton(
                           icon: Icon(
                             _isFlashOn ? Icons.flash_on : Icons.flash_off,
@@ -607,7 +607,7 @@ class _ScanScreenState extends State<ScanScreen> {
                               border: Border.all(color: Colors.white, width: 6),
                               boxShadow: [
                                 BoxShadow(
-                                  color: Colors.black.withOpacity(0.3),
+                                  color: Colors.black.withValues(alpha: 0.3),
                                   blurRadius: 10,
                                   spreadRadius: 2,
                                 ),

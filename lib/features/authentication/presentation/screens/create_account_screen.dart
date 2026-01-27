@@ -101,9 +101,9 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
                 colors: [
-                  Colors.white.withOpacity(0.0),
-                  Colors.white.withOpacity(0.5),
-                  Colors.white.withOpacity(0.9),
+                  Colors.white.withValues(alpha: 0.0),
+                  Colors.white.withValues(alpha: 0.5),
+                  Colors.white.withValues(alpha: 0.9),
                 ],
                 stops: const [0.15, 0.5, 1.0],
               ),
@@ -118,7 +118,7 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(32),
-                    boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 20, offset: const Offset(0, 10))],
+                    boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.1), blurRadius: 20, offset: const Offset(0, 10))],
                   ),
                   child: Form(
                     key: _formKey,

@@ -66,7 +66,7 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
       context: context,
       builder: (BuildContext context) {
         return Dialog(
-          backgroundColor: Colors.white.withOpacity(0.95),
+          backgroundColor: Colors.white.withValues(alpha: 0.95),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(20),
           ),
@@ -78,7 +78,7 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: Colors.yellow.withOpacity(0.2),
+                    color: Colors.yellow.withValues(alpha: 0.2),
                     shape: BoxShape.circle,
                   ),
                   child: const Icon(Icons.star, color: Colors.amber, size: 40),
@@ -166,7 +166,7 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
             top: 50,
             left: 20,
             child: CircleAvatar(
-              backgroundColor: Colors.black.withOpacity(0.5),
+              backgroundColor: Colors.black.withValues(alpha: 0.5),
               child: IconButton(
                 icon: const Icon(Icons.close, color: Colors.white),
                 onPressed: () =>
@@ -178,7 +178,7 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
             top: 50,
             right: 20,
             child: CircleAvatar(
-              backgroundColor: Colors.black.withOpacity(0.5),
+              backgroundColor: Colors.black.withValues(alpha: 0.5),
               child: IconButton(
                 icon: Icon(
                   _isFlashOn ? Icons.flash_on : Icons.flash_off,
