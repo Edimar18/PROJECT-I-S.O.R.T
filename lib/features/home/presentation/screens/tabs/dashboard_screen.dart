@@ -42,7 +42,7 @@ class DashboardScreen extends StatelessWidget {
                 children: [
                   _buildHeader(nickname, totalPoints),
                   const SizedBox(height: 30),
-                  _buildDailyCap(dailyPoints),
+                  _buildDailyCap(dailyPoints, userData),
                   const SizedBox(height: 30),
                   _buildWasteCategories(userData),
                   const SizedBox(height: 30),
@@ -120,7 +120,25 @@ class DashboardScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildDailyCap(double dailyPoints) {
+  double _calculateTreesPlanted(Map<String, dynamic> userData) {
+    double co2Saved = 0.0;
+
+
+    // CO2 factors (kg saved per kg recycled)
+    // Keys match your _buildWasteCategories keys
+    co2Saved += ((userData['currentDayScannedPlastics'] ?? 0) * 1.5);   // Plastic
+    co2Saved += ((userData['currentDayScannedPaper'] ?? 0) * 3.0);      // Paper
+    co2Saved += ((userData['currentDayScannedMetal'] ?? 0) * 9.0);      // Metal (High impact!)
+    co2Saved += ((userData['currentDayScannedCardboard'] ?? 0) * 3.0);  // Cardboard
+    co2Saved += ((userData['currentDayScannedGlass'] ?? 0) * 0.3);      // Glass
+    co2Saved += ((userData['currentDayScannedOrganic'] ?? 0) * 0.2);    // Organic
+
+    // 1 mature tree absorbs approx 21kg CO2 per year.
+    // We calculate "Yearly tree absorption equivalent"
+    return co2Saved / 21.0;
+  }
+
+  Widget _buildDailyCap(double dailyPoints, Map<String, dynamic> userData) {
     const double dailyCap = 20.0;
     final double progress = dailyPoints / dailyCap;
 
@@ -200,12 +218,23 @@ class DashboardScreen extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 20),
-          Text(
-            dailyPoints > 0
-                ? 'Great job! You\'ve reduced \nyour carbon footprint by ${(dailyPoints * 0.75).toStringAsFixed(0)}% today.'
-                : 'Start scanning to reduce your\ncarbon footprint today!',
-            textAlign: TextAlign.center,
-            style: const TextStyle(fontSize: 16, color: Colors.grey, height: 1.5),
+          // Calculate trees specifically for display
+          Builder(
+              builder: (context) {
+                final trees = _calculateTreesPlanted(userData);
+
+                return Text(
+                  dailyPoints > 0
+                      ? 'Great job! Your recycling impact is\nequivalent to planting ${trees.toStringAsFixed(2)} trees! 🌳'
+                      : 'Start scanning to reduce your\ncarbon footprint today!',
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                      fontSize: 16,
+                      color: Colors.grey,
+                      height: 1.5
+                  ),
+                );
+              }
           ),
         ],
       ),
