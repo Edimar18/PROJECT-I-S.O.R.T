@@ -55,7 +55,16 @@ class AuthService {
           'currentDayScannedGlass': 0.0,
           'currentDayScannedTrash': 0.0,
           'todaysActivityLog': [],
-          'rank': 0, // Changed to integer for rank number
+          'rank': 0,
+          'currentDayScannedOrganic': 0.0,
+          'scannedCountCardboard': 0,
+          'scannedCountGlass': 0,
+          'scannedCountMetal': 0,
+          'scannedCountOrganic': 0,
+          'scannedCountPaper': 0,
+          'scannedCountPlastic': 0,
+          'scannedCountTrash': 0,
+          'diversityBonusEarned': false,
           'lastUpdate': FieldValue.serverTimestamp(), 
         });
       }

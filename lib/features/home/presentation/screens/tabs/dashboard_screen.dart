@@ -31,10 +31,8 @@ class DashboardScreen extends StatelessWidget {
 
           final userData = snapshot.data!.data() as Map<String, dynamic>;
           final String nickname = userData['nickname'] ?? 'User';
-          final double totalPoints =
-          (userData['totalPoints'] ?? 0.0).toDouble();
-          final double dailyPoints =
-          (userData['currentPoints'] ?? 0.0).toDouble();
+          final double totalPoints = (userData['totalPoints'] ?? 0.0).toDouble();
+          final double dailyPoints = (userData['currentPoints'] ?? 0.0).toDouble();
 
           return SafeArea(
             child: SingleChildScrollView(
@@ -218,37 +216,37 @@ class DashboardScreen extends StatelessWidget {
     final categories = {
       'Plastic': {
         'icon': Icons.local_drink,
-        'value': userData['currentDayScannedPlastics'] ?? 0.0,
+        'value': (userData['currentDayScannedPlastics'] ?? 0).toDouble(),
         'color': Colors.blueAccent
       },
       'Paper': {
         'icon': Icons.article,
-        'value': userData['currentDayScannedPapers'] ?? 0.0,
+        'value': (userData['currentDayScannedPaper'] ?? 0).toDouble(),
         'color': Colors.greenAccent
       },
       'Metal': {
         'icon': Icons.build,
-        'value': userData['currentDayScannedMetals'] ?? 0.0,
+        'value': (userData['currentDayScannedMetal'] ?? 0).toDouble(),
         'color': Colors.orangeAccent
       },
       'Cardboard': {
         'icon': Icons.inventory_2,
-        'value': userData['currentDayScannedCardboard'] ?? 0.0,
+        'value': (userData['currentDayScannedCardboard'] ?? 0).toDouble(),
         'color': Colors.brown
       },
       'Glass': {
         'icon': Icons.wine_bar,
-        'value': userData['currentDayScannedGlass'] ?? 0.0,
+        'value': (userData['currentDayScannedGlass'] ?? 0).toDouble(),
         'color': Colors.lightBlueAccent
       },
       'Organic': {
         'icon': Icons.eco,
-        'value': userData['currentDayScannedOrganic'] ?? 0.0,
+        'value': (userData['currentDayScannedOrganic'] ?? 0).toDouble(),
         'color': Colors.green
       },
       'Trash': {
         'icon': Icons.delete,
-        'value': userData['currentDayScannedTrash'] ?? 0.0,
+        'value': (userData['currentDayScannedTrash'] ?? 0).toDouble(),
         'color': Colors.black54
       },
     };

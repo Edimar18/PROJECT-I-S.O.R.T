@@ -31,9 +31,9 @@ class WelcomeSection extends StatelessWidget {
               height: 1.3,
             ),
             children: [
-              TextSpan(text: 'Andam na ba ka, \n'),
+              TextSpan(text: 'Higala\n'),
               TextSpan(
-                text: 'Higala?',
+                text: 'Mag SORT nata!',
                 style: TextStyle(color: Color(0xFF2E7D32)),
               ),
             ],
