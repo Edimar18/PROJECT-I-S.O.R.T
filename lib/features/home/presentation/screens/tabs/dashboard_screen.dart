@@ -4,23 +4,45 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../activity_history_screen.dart';
 
-class DashboardScreen extends StatelessWidget {
+// 1. Change to StatefulWidget
+class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
 
   @override
+  State<DashboardScreen> createState() => _DashboardScreenState();
+}
+
+class _DashboardScreenState extends State<DashboardScreen> {
+  // 2. Define a variable to hold the stream
+  late Stream<DocumentSnapshot> _userStream;
+  User? _currentUser;
+
+  @override
+  void initState() {
+    super.initState();
+    _currentUser = FirebaseAuth.instance.currentUser;
+
+    // 3. Initialize the stream ONCE here.
+    // This guarantees we don't reconnect/re-read even if the UI rebuilds 100 times.
+    if (_currentUser != null) {
+      _userStream = FirebaseFirestore.instance
+          .collection('users')
+          .doc(_currentUser!.uid)
+          .snapshots();
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final user = FirebaseAuth.instance.currentUser;
-    if (user == null) {
+    if (_currentUser == null) {
       return const Scaffold(body: Center(child: Text('User not found.')));
     }
 
     return Scaffold(
       backgroundColor: const Color(0xFFF5F5F5),
+      // 4. Use the pre-initialized stream variable
       body: StreamBuilder<DocumentSnapshot>(
-        stream: FirebaseFirestore.instance
-            .collection('users')
-            .doc(user.uid)
-            .snapshots(),
+        stream: _userStream,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
@@ -58,12 +80,17 @@ class DashboardScreen extends StatelessWidget {
     );
   }
 
+  // ... [KEEP ALL YOUR OTHER FUNCTIONS (getGreeting, etc) EXACTLY THE SAME] ...
+
   String _getGreeting() {
     final hour = DateTime.now().hour;
     if (hour < 12) return 'Good Morning';
     if (hour < 17) return 'Good Afternoon';
     return 'Good Evening';
   }
+
+  // Paste the rest of your existing functions here (_formatTotalScore, _buildHeader, etc.)
+  // ...
 
   String _formatTotalScore(double score) {
     final int scoreInt = score.toInt();
@@ -122,7 +149,6 @@ class DashboardScreen extends StatelessWidget {
 
   double _calculateTreesPlanted(Map<String, dynamic> userData) {
     double co2Saved = 0.0;
-
 
     // CO2 factors (kg saved per kg recycled)
     // Keys match your _buildWasteCategories keys
