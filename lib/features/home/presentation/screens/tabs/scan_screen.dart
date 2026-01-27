@@ -123,8 +123,7 @@ class _ScanScreenState extends State<ScanScreen> {
 
       // TEMPORARY: For testing without AI model
       // Remove this and uncomment above when ready
-      await Future.delayed(const Duration(seconds: 1));
-      _showDetectionDialog('plastic', 0.95, 0.02);
+
 
     } catch (e) {
       print('Error processing image: $e');
