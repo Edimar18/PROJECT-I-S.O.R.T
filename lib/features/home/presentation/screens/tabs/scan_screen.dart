@@ -521,7 +521,7 @@ class _ScanScreenState extends State<ScanScreen> {
                     child: Column(
                       children: [
                         const Text(
-                          'AI Trash Detection',
+                          'AI Trash Classifier',
                           style: TextStyle(
                             color: Colors.white,
                             fontSize: 24,

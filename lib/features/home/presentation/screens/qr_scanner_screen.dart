@@ -162,7 +162,7 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  'IOT STATION: $stationId',
+                  'THANK YOU FOR YOUR SUPPORT',
                   style: const TextStyle(color: Colors.black54, fontSize: 12),
                 ),
                 const SizedBox(height: 24),
