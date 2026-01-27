@@ -1,5 +1,7 @@
 
 import 'dart:io';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -42,31 +44,95 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
     });
   }
 
-  void _onDetect(BarcodeCapture capture) {
-    // For now, we'll just show the dialog after any QR is detected
-    // In the future, you would verify the QR code here
-    if (_capturedImagePath != null) return; // Dialog already shown
+  void _onDetect(BarcodeCapture capture) async {
+    if (_capturedImagePath != null) return;
 
-    final image = capture.image;
-    if (image != null) {
-      // This is a simplified example of saving the image.
-      // You might want a more robust solution for production.
-      final imagePath = '/data/user/0/isla.cluster.c.i_sort/cache/captured_qr.png';
-      File(imagePath).writeAsBytes(image);
-      setState(() {
-        _capturedImagePath = imagePath;
-      });
+    final List<Barcode> barcodes = capture.barcodes;
+    if (barcodes.isEmpty || barcodes.first.rawValue == null) {
+      _showError("No QR code found.");
+      return;
     }
 
-    _showRewardDialog();
+    final String scannedCode = barcodes.first.rawValue!;
+    final user = FirebaseAuth.instance.currentUser;
+
+    if (user == null) {
+      _showError("You need to be logged in to claim rewards.");
+      return;
+    }
+
+    try {
+      final querySnapshot = await FirebaseFirestore.instance
+          .collection('codes')
+          .where('code_id', isEqualTo: scannedCode)
+          .limit(1)
+          .get();
+
+      if (querySnapshot.docs.isEmpty) {
+        return;
+      }
+
+      final codeDoc = querySnapshot.docs.first;
+      final codeData = codeDoc.data();
+
+      if (codeData['isActive'] != true) {
+        _showError("This QR code has already been used.");
+        return;
+      }
+
+      final userDocRef = FirebaseFirestore.instance.collection('users').doc(user.uid);
+      final userDoc = await userDocRef.get();
+      final userData = userDoc.data() as Map<String, dynamic>;
+
+      final double currentPoints = (userData['currentPoints'] ?? 0.0).toDouble();
+      final double totalPoints = (userData['totalPoints'] ?? 0.0).toDouble();
+      final double bunosPoints = (codeData['bunosPoints'] ?? 0.0).toDouble();
+      final double trashPoints = (codeData['trash_points'] ?? 0.0).toDouble();
+      const double dailyCap = 20.0;
+
+      double pointsToAdd = 0.0;
+      if (currentPoints < dailyCap) {
+        double toReceive = bunosPoints + trashPoints;
+        if (currentPoints + toReceive > dailyCap) {
+          toReceive = dailyCap - currentPoints;
+        }
+        pointsToAdd = toReceive;
+      } else {
+        _showError("Daily points limit reached.");
+      }
+
+
+
+      await userDocRef.update({
+        'currentPoints': currentPoints + pointsToAdd,
+        'totalPoints': totalPoints + pointsToAdd,
+      });
+
+      await FirebaseFirestore.instance.collection('codes').doc(codeDoc.id).update({'isActive': false});
+      
+      final image = capture.image;
+      if (image != null) {
+        final imagePath = '/data/user/0/isla.cluster.c.i_sort/cache/captured_qr.png';
+        File(imagePath).writeAsBytes(image);
+        setState(() {
+          _capturedImagePath = imagePath;
+        });
+      }
+
+      _showRewardDialog(pointsToAdd, codeData['code_id'] ?? "Unknown");
+
+    } catch (e) {
+      _showError("An error occurred: $e");
+    }
   }
 
-  void _showRewardDialog() {
+
+  void _showRewardDialog(double points, String stationId) {
     showDialog(
       context: context,
       builder: (BuildContext context) {
         return Dialog(
-          backgroundColor: Colors.white.withValues(alpha: 0.95),
+          backgroundColor: Colors.white.withAlpha(242),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(20),
           ),
@@ -78,7 +144,7 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: Colors.yellow.withValues(alpha: 0.2),
+                    color: Colors.yellow.withAlpha(51),
                     shape: BoxShape.circle,
                   ),
                   child: const Icon(Icons.star, color: Colors.amber, size: 40),
@@ -89,15 +155,15 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
                   style: TextStyle(fontWeight: FontWeight.bold, fontSize: 22),
                 ),
                 const SizedBox(height: 8),
-                const Text(
-                  '+20 Points Claimed',
-                  style: TextStyle(
+                Text(
+                  '+$points Points Claimed',
+                  style: const TextStyle(
                       color: Colors.green, fontWeight: FontWeight.bold, fontSize: 16),
                 ),
                 const SizedBox(height: 4),
-                const Text(
-                  'IOT STATION: CARMEN HUB 042',
-                  style: TextStyle(color: Colors.black54, fontSize: 12),
+                Text(
+                  'IOT STATION: $stationId',
+                  style: const TextStyle(color: Colors.black54, fontSize: 12),
                 ),
                 const SizedBox(height: 24),
                 ElevatedButton.icon(
@@ -131,6 +197,7 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
 
   @override
   void dispose() {
+    ScaffoldMessenger.of(context).removeCurrentSnackBar();
     controller.dispose();
     super.dispose();
   }
@@ -166,7 +233,7 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
             top: 50,
             left: 20,
             child: CircleAvatar(
-              backgroundColor: Colors.black.withValues(alpha: 0.5),
+              backgroundColor: Colors.black.withAlpha(128),
               child: IconButton(
                 icon: const Icon(Icons.close, color: Colors.white),
                 onPressed: () =>
@@ -178,7 +245,7 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
             top: 50,
             right: 20,
             child: CircleAvatar(
-              backgroundColor: Colors.black.withValues(alpha: 0.5),
+              backgroundColor: Colors.black.withAlpha(128),
               child: IconButton(
                 icon: Icon(
                   _isFlashOn ? Icons.flash_on : Icons.flash_off,
@@ -215,7 +282,7 @@ class QrScannerOverlayShape extends ShapeBorder {
   final double borderLength;
   final double cutOutSize;
 
-  QrScannerOverlayShape({
+  const QrScannerOverlayShape({
     this.borderColor = Colors.red,
     this.borderWidth = 3.0,
     this.overlayColor = 0.8,
@@ -236,14 +303,14 @@ class QrScannerOverlayShape extends ShapeBorder {
 
   @override
   Path getOuterPath(Rect rect, {TextDirection? textDirection}) {
-    Path _getLeftTopPath(Rect rect) {
+    Path getLeftTopPath(Rect rect) {
       return Path()
         ..moveTo(rect.left + borderRadius, rect.top)
         ..lineTo(rect.left, rect.top)
         ..lineTo(rect.left, rect.top + borderRadius);
     }
 
-    return _getLeftTopPath(rect)
+    return getLeftTopPath(rect)
       ..lineTo(rect.left, rect.bottom - borderRadius)
       ..lineTo(rect.left, rect.bottom)
       ..lineTo(rect.left + borderRadius, rect.bottom)
