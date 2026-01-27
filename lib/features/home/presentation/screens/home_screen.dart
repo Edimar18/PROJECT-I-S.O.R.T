@@ -24,13 +24,20 @@ class _HomeScreenState extends State<HomeScreen> {
     _userService.checkAndResetDailyData();
   }
 
-  // Simplified the list of screens. The placeholder is no longer needed.
-  static const List<Widget> _screens = <Widget>[
-    DashboardScreen(), // Index 0
-    ScanScreen(),      // Index 1
-    StatsScreen(),     // Index 2
-    ProfileScreen(),   // Index 3
-  ];
+  void _onDashboardSelected() {
+    setState(() {
+      _selectedIndex = 0;
+    });
+  }
+
+  List<Widget> _buildScreens() {
+    return [
+      DashboardScreen(),
+      ScanScreen(onDashboardSelected: _onDashboardSelected),
+      StatsScreen(),
+      ProfileScreen(),
+    ];
+  }
 
   void _onItemTapped(int index) {
     setState(() {
@@ -40,13 +47,16 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final screens = _buildScreens();
     return Scaffold(
-      // This now correctly selects the screen based on the index.
-      body: _screens[_selectedIndex],
+      body: screens[_selectedIndex],
       bottomNavigationBar: _buildBottomNavigationBar(),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          Navigator.push(context, MaterialPageRoute(builder: (context) => const QrScannerScreen()));
+          Navigator.push(
+              context,
+              MaterialPageRoute(
+                  builder: (context) => const QrScannerScreen()));
         },
         backgroundColor: const Color(0xFF1de9b6),
         elevation: 2.0,
@@ -67,7 +77,6 @@ class _HomeScreenState extends State<HomeScreen> {
           _buildNavItem(icon: Icons.home_filled, index: 0, label: 'Home'),
           _buildNavItem(icon: Icons.camera_alt_outlined, index: 1, label: 'Scan'),
           const SizedBox(width: 48), // The space for the FAB
-          // Corrected the indices for Stats and Profile
           _buildNavItem(icon: Icons.bar_chart_outlined, index: 2, label: 'Stats'),
           _buildNavItem(icon: Icons.person_outline, index: 3, label: 'Profile'),
         ],
@@ -75,7 +84,8 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildNavItem({required IconData icon, required int index, required String label}) {
+  Widget _buildNavItem(
+      {required IconData icon, required int index, required String label}) {
     final isSelected = _selectedIndex == index;
     return InkWell(
       onTap: () => _onItemTapped(index),
@@ -85,7 +95,10 @@ class _HomeScreenState extends State<HomeScreen> {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Icon(icon, color: isSelected ? const Color(0xFF1de9b6) : Colors.grey),
-          Text(label, style: TextStyle(color: isSelected ? const Color(0xFF1de9b6) : Colors.grey, fontSize: 12)),
+          Text(label,
+              style: TextStyle(
+                  color: isSelected ? const Color(0xFF1de9b6) : Colors.grey,
+                  fontSize: 12)),
         ],
       ),
     );

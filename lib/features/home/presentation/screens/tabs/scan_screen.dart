@@ -5,7 +5,9 @@ import 'package:flutter/material.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 class ScanScreen extends StatefulWidget {
-  const ScanScreen({super.key});
+  final VoidCallback? onDashboardSelected;
+
+  const ScanScreen({super.key, this.onDashboardSelected});
 
   @override
   State<ScanScreen> createState() => _ScanScreenState();
@@ -259,7 +261,7 @@ class _ScanScreenState extends State<ScanScreen> {
                       child: IconButton(
                         icon: const Icon(Icons.close, color: Colors.white),
                         onPressed: () {
-                          Navigator.of(context).popUntil((route) => route.isFirst);
+                          widget.onDashboardSelected?.call();
                         },
                       ),
                     ),
