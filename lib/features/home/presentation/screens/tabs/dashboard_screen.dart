@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import '../activity_history_screen.dart';
 
 class DashboardScreen extends StatelessWidget {
   const DashboardScreen({super.key});
@@ -48,6 +49,7 @@ class DashboardScreen extends StatelessWidget {
                   _buildWasteCategories(userData),
                   const SizedBox(height: 30),
                   _buildRecentActivity(
+                      context,
                       userData['todaysActivityLog'] as List<dynamic>? ?? []),
                 ],
               ),
@@ -334,7 +336,16 @@ class DashboardScreen extends StatelessWidget {
     return category[0].toUpperCase() + category.substring(1);
   }
 
-  Widget _buildRecentActivity(List<dynamic> activities) {
+  void _navigateToActivityHistory(BuildContext context, List<dynamic> activities) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => ActivityHistoryScreen(activities: activities),
+      ),
+    );
+  }
+
+  Widget _buildRecentActivity(BuildContext context, List<dynamic> activities) {
     // Handle empty activity log
     if (activities.isEmpty) {
       return Column(
@@ -349,9 +360,9 @@ class DashboardScreen extends StatelessWidget {
                       fontWeight: FontWeight.bold,
                       color: Color(0xFF333333))),
               TextButton(
-                onPressed: () {},
-                child: const Text('View All',
-                    style: TextStyle(color: Color(0xFF1de9b6))),
+                onPressed: null, // Disabled when no activities
+                child: Text('View All',
+                    style: TextStyle(color: Colors.grey.shade400)),
               ),
             ],
           ),
@@ -419,7 +430,8 @@ class DashboardScreen extends StatelessWidget {
       return timestampB.compareTo(timestampA);
     });
 
-    // Take only the latest 5 activities
+    // Get total count and take only the latest 5 for preview
+    final totalCount = parsedActivities.length;
     final latestActivities = parsedActivities.take(5).toList();
 
     return Column(
@@ -428,17 +440,26 @@ class DashboardScreen extends StatelessWidget {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            const Text('Recent Activity',
-                style: TextStyle(
+            Text('Recent Activity',
+                style: const TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
                     color: Color(0xFF333333))),
             TextButton(
-              onPressed: () {
-                // TODO: Navigate to full activity history
-              },
-              child: const Text('View All',
-                  style: TextStyle(color: Color(0xFF1de9b6))),
+              onPressed: () => _navigateToActivityHistory(context, activities),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text('View All',
+                      style: const TextStyle(color: Color(0xFF1de9b6))),
+                  if (totalCount > 5) ...[
+                    const SizedBox(width: 4),
+                    Text('(${totalCount})',
+                        style: TextStyle(
+                            color: Colors.grey.shade600, fontSize: 12)),
+                  ],
+                ],
+              ),
             ),
           ],
         ),
