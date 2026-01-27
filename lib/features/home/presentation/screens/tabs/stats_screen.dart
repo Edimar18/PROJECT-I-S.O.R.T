@@ -309,7 +309,7 @@ class _StatsScreenState extends State<StatsScreen> {
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 20),
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 20),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
@@ -337,11 +337,13 @@ class _StatsScreenState extends State<StatsScreen> {
               ),
             ],
           ),
-          const SizedBox(height: 20),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: List.generate(orderedTopThree.length, (index) {
+          const SizedBox(height: 15),
+          Padding(
+              padding: const EdgeInsets.only(top: 20, bottom: 10),
+              child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: List.generate(orderedTopThree.length, (index) {
               int rank;
               Map<String, dynamic> playerData;
               if (index == 0) {
@@ -365,7 +367,7 @@ class _StatsScreenState extends State<StatsScreen> {
                 isCurrentUser: isCurrentUser,
               );
             }),
-          ),
+            )),
         ],
       ),
     );
