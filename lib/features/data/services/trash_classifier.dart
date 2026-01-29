@@ -1,8 +1,11 @@
+import '../../user/services/update_service.dart';
 import 'dart:io';
 import 'dart:typed_data';
 import 'package:flutter/services.dart';
 import 'package:tflite_flutter/tflite_flutter.dart';
 import 'package:image/image.dart' as img;
+import 'package:path_provider/path_provider.dart';
+import 'dart:io';
 
 class TrashClassifier {
   Interpreter? _interpreter;
@@ -30,10 +33,28 @@ class TrashClassifier {
   Future<void> loadModel() async {
     try {
       final options = InterpreterOptions()..threads = 4;
-      _interpreter = await Interpreter.fromAsset(
-        'assets/models/ei-project-i.s.o.r.t-pretrained-learn-tensorflow-lite-float32-model.44.lite',
-        options: options,
-      );
+
+      // Check if updated model exists
+      final appDir = await getApplicationDocumentsDirectory();
+      final downloadedModelPath = '${appDir.path}/model.lite';
+      final downloadedModel = File(downloadedModelPath);
+
+      if (await downloadedModel.exists()) {
+        // Load downloaded model
+        _interpreter = await Interpreter.fromFile(
+          downloadedModel,
+          options: options,
+        );
+        print('Loaded updated model from storage');
+      } else {
+        // Load bundled model from assets
+        _interpreter = await Interpreter.fromAsset(
+          'assets/models/model.lite',
+          options: options,
+        );
+        print('Loaded bundled model from assets');
+      }
+
       print('Model loaded successfully');
     } catch (e) {
       print('Error loading model: $e');

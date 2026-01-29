@@ -1,8 +1,10 @@
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:i_sort/features/authentication/services/auth_service.dart';
+// Import the update service and dialog
+import '../../../../user/services/update_service.dart';
+import '../../widgets/update_widget.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -17,7 +19,10 @@ class ProfileScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: const Color(0xFFF5F5F5),
       body: StreamBuilder<DocumentSnapshot>(
-        stream: FirebaseFirestore.instance.collection('users').doc(user.uid).snapshots(),
+        stream: FirebaseFirestore.instance
+            .collection('users')
+            .doc(user.uid)
+            .snapshots(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
@@ -30,7 +35,8 @@ class ProfileScreen extends StatelessWidget {
           final String nickname = userData['nickname'] ?? 'User';
           final int rank = (userData['rank'] ?? 0).toInt();
           final double totalPoints = (userData['totalPoints'] ?? 0.0).toDouble();
-          final double totalWasteScanned = (userData['totalWasteScanned'] ?? 0.0).toDouble();
+          final double totalWasteScanned =
+          (userData['totalWasteScanned'] ?? 0.0).toDouble();
 
           return SingleChildScrollView(
             padding: const EdgeInsets.symmetric(horizontal: 20.0),
@@ -42,7 +48,9 @@ class ProfileScreen extends StatelessWidget {
                 _buildStats(totalPoints, totalWasteScanned, rank),
                 const SizedBox(height: 40),
                 _buildSettings(context, userData),
-                const SizedBox(height: 30),
+                const SizedBox(height: 20),
+                _buildCheckUpdateButton(context),
+                const SizedBox(height: 20),
                 _buildSignOutButton(context),
                 const SizedBox(height: 30),
               ],
@@ -62,7 +70,11 @@ class ProfileScreen extends StatelessWidget {
           child: Icon(Icons.person, size: 50, color: Color(0xFF1de9b6)),
         ),
         const SizedBox(height: 12),
-        Text(nickname, style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Color(0xFF333333))),
+        Text(nickname,
+            style: const TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF333333))),
       ],
     );
   }
@@ -72,16 +84,17 @@ class ProfileScreen extends StatelessWidget {
       mainAxisAlignment: MainAxisAlignment.spaceAround,
       children: [
         _buildStatItem('Total Points', totalPoints.toInt().toString()),
-        _buildStatItem('Total Waste Scanned', '${totalWasteScanned.toStringAsFixed(1)}kg'),
-        _buildStatItem('Rank', '#$rank'),
+        _buildStatItem('Total Waste Scanned',
+            '${totalWasteScanned.toStringAsFixed(1)}kg'),
+        _buildStatItem('Rank', rank > 0 ? '#$rank' : 'Unranked'),
       ],
     );
   }
 
   Widget _buildStatItem(String label, String value) {
     return Container(
-      width: 110, // Increased width
-      padding: const EdgeInsets.symmetric(vertical: 16), // Increased padding
+      width: 110,
+      padding: const EdgeInsets.symmetric(vertical: 16),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(15),
@@ -89,9 +102,15 @@ class ProfileScreen extends StatelessWidget {
       ),
       child: Column(
         children: [
-          Text(label, textAlign: TextAlign.center, style: const TextStyle(fontSize: 12, color: Colors.grey)),
+          Text(label,
+              textAlign: TextAlign.center,
+              style: const TextStyle(fontSize: 12, color: Colors.grey)),
           const SizedBox(height: 8),
-          Text(value, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF333333))),
+          Text(value,
+              style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF333333))),
         ],
       ),
     );
@@ -108,17 +127,30 @@ class ProfileScreen extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('Settings', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF333333))),
+          const Text('Settings',
+              style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF333333))),
           const SizedBox(height: 10),
-          _buildSettingsItem(context, icon: Icons.person_outline, title: 'Account Information', onTap: () => _showAccountInfo(context, userData)),
+          _buildSettingsItem(context,
+              icon: Icons.person_outline,
+              title: 'Account Information',
+              onTap: () => _showAccountInfo(context, userData)),
           const Divider(),
-          _buildSettingsItem(context, icon: Icons.info_outline, title: 'About Us', onTap: () => _showAboutUs(context)),
+          _buildSettingsItem(context,
+              icon: Icons.info_outline,
+              title: 'About Us',
+              onTap: () => _showAboutUs(context)),
         ],
       ),
     );
   }
 
-  Widget _buildSettingsItem(BuildContext context, {required IconData icon, required String title, required VoidCallback onTap}) {
+  Widget _buildSettingsItem(BuildContext context,
+      {required IconData icon,
+        required String title,
+        required VoidCallback onTap}) {
     return ListTile(
       leading: Icon(icon, color: Colors.grey.shade600),
       title: Text(title, style: const TextStyle(fontWeight: FontWeight.w500)),
@@ -127,22 +159,233 @@ class ProfileScreen extends StatelessWidget {
     );
   }
 
+  Widget _buildCheckUpdateButton(BuildContext context) {
+    return SizedBox(
+      width: double.infinity,
+      child: ElevatedButton.icon(
+        onPressed: () => _checkForUpdates(context),
+        icon: const Icon(Icons.system_update_outlined),
+        label: const Text('Check for Updates'),
+        style: ElevatedButton.styleFrom(
+          padding: const EdgeInsets.symmetric(vertical: 16),
+          backgroundColor: const Color(0xFF1de9b6),
+          foregroundColor: Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(15),
+          ),
+          elevation: 0,
+        ),
+      ),
+    );
+  }
+
+  Future<void> _checkForUpdates(BuildContext context) async {
+    // Show loading dialog
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => const Center(
+        child: CircularProgressIndicator(
+          valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF1de9b6)),
+        ),
+      ),
+    );
+
+    // Uncomment when you have the UpdateService implemented
+
+    final updateService = UpdateService();
+    final updateInfo = await updateService.checkForUpdates();
+
+    // Close loading dialog
+    if (context.mounted) Navigator.of(context).pop();
+
+    if (updateInfo['error'] != null) {
+      // Show error
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error checking updates: ${updateInfo['error']}')),
+        );
+      }
+      return;
+    }
+
+    if (!updateInfo['hasUpdate']) {
+      // No updates available
+      if (context.mounted) {
+        _showNoUpdateDialog(context);
+      }
+      return;
+    }
+
+    // Show update dialog
+    if (context.mounted) {
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => UpdateDialog(
+          updateInfo: updateInfo,
+          onUpdate: (downloadModel, downloadApp) async {
+            await _performUpdate(context, updateInfo, downloadModel, downloadApp);
+          },
+        ),
+      );
+    }
+
+
+    // Temporary - Remove this when implementing UpdateService
+    /*
+    await Future.delayed(const Duration(seconds: 1));
+    if (context.mounted) {
+      Navigator.of(context).pop();
+      _showNoUpdateDialog(context);
+    }
+     */
+  }
+
+  Future<void> _performUpdate(
+      BuildContext context,
+      Map<String, dynamic> updateInfo,
+      bool downloadModel,
+      bool downloadApp,
+      ) async {
+    // Uncomment when you have UpdateService implemented
+    /*
+    final updateService = UpdateService();
+
+    try {
+      if (downloadModel) {
+        final modelData = updateInfo['modelData'] as Map<String, dynamic>;
+        final success = await updateService.downloadAndUpdateModel(
+          modelData['download_link'],
+          updateInfo['latestModelVersion'],
+          (progress) {
+            // Update progress in dialog
+            print('Model download progress: ${(progress * 100).toStringAsFixed(0)}%');
+          },
+        );
+
+        if (!success) {
+          throw Exception('Failed to update model');
+        }
+      }
+
+      if (downloadApp) {
+        final appData = updateInfo['appData'] as Map<String, dynamic>;
+        await updateService.downloadAndInstallApp(
+          appData['download_link'],
+          (progress) {
+            // Update progress in dialog
+            print('App download progress: ${(progress * 100).toStringAsFixed(0)}%');
+          },
+        );
+        // App will restart after installation
+        return;
+      }
+
+      // Close dialog and show success
+      if (context.mounted) {
+        Navigator.of(context).pop();
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Update completed successfully!'),
+            backgroundColor: Color(0xFF1de9b6),
+          ),
+        );
+      }
+    } catch (e) {
+      if (context.mounted) {
+        Navigator.of(context).pop();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Update failed: $e')),
+        );
+      }
+    }
+    */
+  }
+
+  void _showNoUpdateDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: const Color(0xFF1de9b6).withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: const Icon(
+                Icons.check_circle_outline,
+                color: Color(0xFF1de9b6),
+                size: 24,
+              ),
+            ),
+            const SizedBox(width: 12),
+            const Text('You\'re Up to Date!'),
+          ],
+        ),
+        content: const Text(
+          'You have the latest version of the app and AI model.',
+          style: TextStyle(color: Colors.grey),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('OK'),
+          ),
+        ],
+      ),
+    );
+  }
+
   void _showAccountInfo(BuildContext context, Map<String, dynamic> userData) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: const Text('Account Information'),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Nickname: ${userData['nickname'] ?? 'N/A'}'),
-            Text('Email: ${userData['email'] ?? 'N/A'}'),
-            Text('Address: ${userData['address'] ?? 'N/A'}'),
-            Text('Contact: ${userData['contactNumber'] ?? 'N/A'}'),
+            _buildInfoRow('Nickname', userData['nickname'] ?? 'N/A'),
+            _buildInfoRow('Email', userData['email'] ?? 'N/A'),
+            _buildInfoRow('Address', userData['address'] ?? 'N/A'),
+            _buildInfoRow('Contact', userData['contactNumber'] ?? 'N/A'),
           ],
         ),
-        actions: [TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text('Close'))],
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Close'),
+          )
+        ],
+      ),
+    );
+  }
+
+  Widget _buildInfoRow(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            style: const TextStyle(
+              fontSize: 12,
+              color: Colors.grey,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            value,
+            style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w500),
+          ),
+        ],
       ),
     );
   }
@@ -151,9 +394,16 @@ class ProfileScreen extends StatelessWidget {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: const Text('About Us'),
-        content: const Text('I-SORT is a project dedicated to promoting proper waste segregation and recycling.'),
-        actions: [TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text('Close'))],
+        content: const Text(
+            'I-SORT is a project dedicated to promoting proper waste segregation and recycling using AI-powered technology.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Close'),
+          )
+        ],
       ),
     );
   }
@@ -165,12 +415,14 @@ class ProfileScreen extends StatelessWidget {
         onPressed: () => AuthService().signOut(),
         style: TextButton.styleFrom(
           padding: const EdgeInsets.symmetric(vertical: 16),
-          backgroundColor: Colors.red.withOpacity(0.1),
+          backgroundColor: Colors.red.withValues(alpha: 0.1),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(15),
           ),
         ),
-        child: const Text('Sign Out', style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold, fontSize: 16)),
+        child: const Text('Sign Out',
+            style: TextStyle(
+                color: Colors.red, fontWeight: FontWeight.bold, fontSize: 16)),
       ),
     );
   }
