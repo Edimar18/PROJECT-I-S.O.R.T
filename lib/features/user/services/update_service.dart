@@ -79,7 +79,7 @@ class UpdateService {
 
       // Get app directory
       final appDir = await getApplicationDocumentsDirectory();
-      final modelPath = '${appDir.path}/model.tflite';
+      final modelPath = '${appDir.path}/model.lite';
 
       // Save the new model
       final file = File(modelPath);
