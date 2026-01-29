@@ -43,6 +43,7 @@ dependencies:
   mobile_scanner: ^5.1.0
   tflite_flutter: ^0.12.1
   image: ^4.7.2
+  flutter_native_splash: ^2.4.0
 
 dev_dependencies:
   flutter_test:
@@ -54,6 +55,7 @@ dev_dependencies:
   # package. See that file for information about deactivating specific lint
   # rules and activating additional ones.
   flutter_lints: ^6.0.0
+  flutter_launcher_icons: 0.14.4
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/spec
@@ -70,6 +72,8 @@ flutter:
   assets:
     - assets/images/
     - assets/models/
+    - assets/icon/
+    - assets/splash/
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images
@@ -96,3 +100,21 @@ flutter:
   #
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/to/font-from-package
+  # Add this section at the end of pubspec.yaml
+flutter_launcher_icons:
+  android: true
+  ios: false
+  image_path: "assets/icon/app_icon.png" # Path to your master icon
+  min_sdk_android: 21 # (Optional) Your app's minimum Android SDK version
+
+flutter_native_splash:
+  color: "#C5FFDE"        # background color (hex)
+  image: assets/splash/splash.png
+
+  android: true
+  ios: false
+  web: false
+
+  android_gravity: center
+  fullscreen: true
+
