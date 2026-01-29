@@ -157,10 +157,10 @@ class UpdateService {
     if (modelVersion != null && modelVersion > CURRENT_MODEL_VERSION) {
       // Use downloaded model
       final appDir = await getApplicationDocumentsDirectory();
-      return '${appDir.path}/model.tflite';
+      return '${appDir.path}/model.lite';
     } else {
       // Use bundled model from assets
-      return 'assets/models/model.tflite';
+      return 'assets/models/model.lite';
     }
   }
 }
