@@ -224,8 +224,10 @@ class ProfileScreen extends StatelessWidget {
         barrierDismissible: false,
         builder: (context) => UpdateDialog(
           updateInfo: updateInfo,
-          onUpdate: (downloadModel, downloadApp) async {
-            await _performUpdate(context, updateInfo, downloadModel, downloadApp);
+          onUpdate: (downloadModel, downloadApp, modelUrl, appUrl) async {
+            // MODIFICATION: Pass the new URL parameters to your _performUpdate method
+            await _performUpdate(
+                context, updateInfo, downloadModel, downloadApp, modelUrl, appUrl);
           },
         ),
       );
@@ -247,9 +249,11 @@ class ProfileScreen extends StatelessWidget {
       Map<String, dynamic> updateInfo,
       bool downloadModel,
       bool downloadApp,
+      String? modelUrl,
+      String? appUrl,
       ) async {
     // Uncomment when you have UpdateService implemented
-    /*
+
     final updateService = UpdateService();
 
     try {
@@ -300,7 +304,7 @@ class ProfileScreen extends StatelessWidget {
         );
       }
     }
-    */
+
   }
 
   void _showNoUpdateDialog(BuildContext context) {
@@ -395,13 +399,31 @@ class ProfileScreen extends StatelessWidget {
       context: context,
       builder: (context) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text('About Us'),
-        content: const Text(
-            'I-SORT is a project dedicated to promoting proper waste segregation and recycling using AI-powered technology.'),
+        title: const Text(
+          'About I-S.O.R.T.',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
+        content: const SingleChildScrollView(
+          child: Text(
+            '''I-S.O.R.T. (Iskolar Smart Operations for Recycling & Tracking) is a student-led initiative by the ISDA Cluster C scholar-leaders of Cagayan de Oro City.
+
+Our Mission:
+We bridge the gap between awareness and behavior using AI-powered mentorship to transform disposal into a lifelong learning experience.
+
+The Story:
+Grounded through the City Education Development Office, we recognized a critical "Segregation Gap" in CDO. This project serves as a catalyst for environmental change.
+
+Intelligent. Sustainable. Scholar-led.''',
+            style: TextStyle(fontSize: 14, height: 1.5),
+          ),
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Close'),
+            child: const Text(
+              'Close',
+              style: TextStyle(color: Color(0xFF1de9b6), fontWeight: FontWeight.bold),
+            ),
           )
         ],
       ),

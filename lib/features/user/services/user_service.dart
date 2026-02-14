@@ -73,10 +73,14 @@ class UserService {
       'paper': (userData['scannedCountPaper'] ?? 0),
       'plastic': (userData['scannedCountPlastic'] ?? 0),
       'trash': (userData['scannedCountTrash'] ?? 0),
+
+
     };
 
     // Determine which field to update based on category
     String categoryField = 'currentDayScanned${_capitalizeFirst(category)}';
+    String capitalized = _capitalizeFirst(category);
+    String totalCategoryField = 'totalScanned$capitalized';
     if (category == 'organic') {
       categoryField = 'currentDayScannedOrganic';
     }
@@ -115,6 +119,7 @@ class UserService {
     // Prepare update data
     Map<String, dynamic> updateData = {
       categoryField: FieldValue.increment(weight),
+      totalCategoryField: FieldValue.increment(weight),
       'totalWasteScanned': FieldValue.increment(weight),
       countField: FieldValue.increment(1),
       'todaysActivityLog': FieldValue.arrayUnion([activityEntry]),

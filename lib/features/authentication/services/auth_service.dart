@@ -54,6 +54,16 @@ class AuthService {
           'currentDayScannedCardboard': 0.0,
           'currentDayScannedGlass': 0.0,
           'currentDayScannedTrash': 0.0,
+
+
+          'totalScannedPapers': 0.0,
+          'totalScannedPlastics': 0.0,
+          'totalScannedMetals': 0.0,
+          'totalScannedCardboard': 0.0,
+          'totalScannedGlass': 0.0,
+          'totalScannedTrash': 0.0,
+          'totalScannedOrganic': 0.0,
+
           'todaysActivityLog': [],
           'rank': 0,
           'currentDayScannedOrganic': 0.0,

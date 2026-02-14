@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 
 class UpdateDialog extends StatefulWidget {
   final Map<String, dynamic> updateInfo;
-  final Function(bool downloadModel, bool downloadApp) onUpdate;
+  final Function(bool downloadModel, bool downloadApp, String? modelUrl, String? appUrl) onUpdate;
+
 
   const UpdateDialog({
     super.key,
@@ -101,7 +102,13 @@ class _UpdateDialogState extends State<UpdateDialog> {
                 _isUpdating = true;
                 _statusMessage = 'Starting update...';
               });
-              widget.onUpdate(hasModelUpdate, hasAppUpdate);
+              widget.onUpdate(
+                  hasModelUpdate,
+                  hasAppUpdate,
+                  widget.updateInfo['modelData']?['download_link'],
+                  widget.updateInfo['appData']?['download_link'],
+
+              );
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFF1de9b6),

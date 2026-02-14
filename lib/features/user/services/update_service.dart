@@ -12,7 +12,7 @@ class UpdateService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   // Current versions - CHANGE THESE MANUALLY when you update
-  static const int CURRENT_APP_VERSION = 1;
+  static const int CURRENT_APP_VERSION = 3;
   static const int CURRENT_MODEL_VERSION = 1;
 
   // SharedPreferences keys
