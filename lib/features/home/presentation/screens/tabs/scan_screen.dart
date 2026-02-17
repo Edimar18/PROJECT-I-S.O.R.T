@@ -283,18 +283,18 @@ class _ScanScreenState extends State<ScanScreen> {
     switch (category.toLowerCase()) {
       case 'cardboard':
         return 'Cardboard';
+      case 'e-waste':           // ADD
+        return 'Electronic Waste';
       case 'glass':
         return 'Glass Container';
+      case 'medical':           // ADD
+        return 'Medical Waste';
       case 'metal':
         return 'Metal Can';
-      case 'organic':
-        return 'Organic Waste';
       case 'paper':
         return 'Paper';
       case 'plastic':
         return 'PET Plastic Bottle';
-      case 'trash':
-        return 'General Waste';
       default:
         return 'Unknown Item';
     }
@@ -304,18 +304,18 @@ class _ScanScreenState extends State<ScanScreen> {
     switch (category.toLowerCase()) {
       case 'cardboard':
         return 'Cardboard';
+      case 'e-waste':           // ADD
+        return 'Electronics';
       case 'glass':
         return 'Glass';
+      case 'medical':           // ADD
+        return 'Medical';
       case 'metal':
         return 'Metal/Aluminum';
-      case 'organic':
-        return 'Organic';
       case 'paper':
         return 'Paper';
       case 'plastic':
         return 'PET Plastic';
-      case 'trash':
-        return 'Mixed Waste';
       default:
         return 'Unknown';
     }
@@ -329,8 +329,11 @@ class _ScanScreenState extends State<ScanScreen> {
       case 'paper':
       case 'plastic':
         return true;
-      case 'organic':
-      case 'trash':
+      case 'e-waste':           // ADD
+      case 'medical':           // ADD
+        return false;           // Special disposal needed
+      case 'organic':           // REMOVE
+      case 'trash':             // REMOVE
         return false;
       default:
         return false;
@@ -351,8 +354,14 @@ class _ScanScreenState extends State<ScanScreen> {
       case 'cardboard':
         iconData = Icons.inventory_2_outlined;
         break;
+      case 'e-waste':                               // ADD
+        iconData = Icons.phone_android_outlined;
+        break;
       case 'glass':
         iconData = Icons.wine_bar_outlined;
+        break;
+      case 'medical':                               // ADD
+        iconData = Icons.medical_services_outlined;
         break;
       case 'metal':
         iconData = Icons.settings_input_component_outlined;
@@ -362,12 +371,6 @@ class _ScanScreenState extends State<ScanScreen> {
         break;
       case 'plastic':
         iconData = Icons.local_drink_outlined;
-        break;
-      case 'organic':
-        iconData = Icons.eco_outlined;
-        break;
-      case 'trash':
-        iconData = Icons.delete_outline;
         break;
       default:
         iconData = Icons.help_outline;
@@ -646,4 +649,10 @@ class _ScanScreenState extends State<ScanScreen> {
       ),
     );
   }
+
+
+
+
 }
+
+

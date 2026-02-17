@@ -11,23 +11,23 @@ class TrashClassifier {
   Interpreter? _interpreter;
   final List<String> _labels = [
     'cardboard',
+    'e-waste',
     'glass',
+    'medical',
     'metal',
-    'organic',
     'paper',
     'plastic',
-    'trash'
   ];
 
   // Average weights in kg for each category
   static const Map<String, double> averageWeights = {
-    'cardboard': 0.05, // 50g average cardboard piece
-    'glass': 0.25, // 250g average glass bottle
-    'metal': 0.015, // 15g average aluminum can
-    'organic': 0.1, // 100g average organic waste
-    'paper': 0.01, // 10g average paper
-    'plastic': 0.02, // 20g average plastic bottle
-    'trash': 0.05, // 50g average mixed trash
+    'cardboard': 0.05,
+    'e-waste': 0.30,     // ADD - electronics are heavier
+    'glass': 0.25,
+    'medical': 0.05,     // ADD - medical waste
+    'metal': 0.015,
+    'paper': 0.01,
+    'plastic': 0.02,
   };
 
   Future<void> loadModel() async {
@@ -36,7 +36,7 @@ class TrashClassifier {
 
       // Check if updated model exists
       final appDir = await getApplicationDocumentsDirectory();
-      final downloadedModelPath = '${appDir.path}/model.lite';
+      final downloadedModelPath = '${appDir.path}/best_float16.tflite';
       final downloadedModel = File(downloadedModelPath);
 
       if (await downloadedModel.exists()) {
@@ -49,7 +49,7 @@ class TrashClassifier {
       } else {
         // Load bundled model from assets
         _interpreter = await Interpreter.fromAsset(
-          'assets/models/model.lite',
+          'assets/models/best_float16.tflite',
           options: options,
         );
         print('Loaded bundled model from assets');
@@ -110,20 +110,20 @@ class TrashClassifier {
       throw Exception('Failed to decode image');
     }
 
-    // Resize to 160x160
-    img.Image resizedImage = img.copyResize(image, width: 160, height: 160);
+    // // Resize to 224x224 (YOLOv8-cls default)
+    img.Image resizedImage = img.copyResize(image, width: 224, height: 224);
 
     // Convert to Float32List with pixel values 0-255 (not normalized)
     final imageMatrix = List.generate(
-      160,
+      224,
           (y) => List.generate(
-        160,
+        224,
             (x) {
           final pixel = resizedImage.getPixel(x, y);
           return [
-            pixel.r.toDouble(),
-            pixel.g.toDouble(),
-            pixel.b.toDouble(),
+            pixel.r.toDouble() / 255.0,  // ✅ Normalize to 0-1
+            pixel.g.toDouble() / 255.0,  // ✅ Normalize to 0-1
+            pixel.b.toDouble() / 255.0,  // ✅ Normalize to 0-1
           ];
         },
       ),

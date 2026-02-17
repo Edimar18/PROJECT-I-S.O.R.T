@@ -21,20 +21,30 @@ class UserService {
       if (lastUpdate == null || _isNewDay(lastUpdate.toDate(), now)) {
         await userDocRef.update({
           'currentPoints': 0.0,
-          'currentDayScannedPapers': 0.0,
-          'currentDayScannedPlastics': 0.0,
-          'currentDayScannedMetals': 0.0,
-          'currentDayScannedCardboard': 0.0,
-          'currentDayScannedGlass': 0.0,
-          'currentDayScannedTrash': 0.0,
-          'currentDayScannedOrganic': 0.0,
+          'currentDayScannedCardboard': 0.0,  // Keep
+          'currentDayScannedEwaste': 0.0,     // ADD (note: Ewaste, not E-waste)
+          'currentDayScannedGlass': 0.0,      // Keep
+          'currentDayScannedMedical': 0.0,    // ADD
+          'currentDayScannedMetal': 0.0,      // Keep (was Metals, now Metal)
+          'currentDayScannedPaper': 0.0,      // Keep (was Papers, now Paper)
+          'currentDayScannedPlastic': 0.0,    // Keep (was Plastics, now Plastic)
+
+          // REMOVE these:
+          // 'currentDayScannedOrganic': 0.0,
+          // 'currentDayScannedTrash': 0.0,
+
           'scannedCountCardboard': 0,
+          'scannedCountEwaste': 0,      // ADD
           'scannedCountGlass': 0,
+          'scannedCountMedical': 0,     // ADD
           'scannedCountMetal': 0,
-          'scannedCountOrganic': 0,
           'scannedCountPaper': 0,
           'scannedCountPlastic': 0,
-          'scannedCountTrash': 0,
+
+          // REMOVE these:
+          // 'scannedCountOrganic': 0,
+          // 'scannedCountTrash': 0,
+
           'diversityBonusEarned': false,
           'todaysActivityLog': [],
           'lastUpdate': Timestamp.fromDate(now),
@@ -67,25 +77,31 @@ class UserService {
     final double currentPoints = (userData['currentPoints'] ?? 0).toDouble();
     final Map<String, dynamic> scannedCounts = {
       'cardboard': (userData['scannedCountCardboard'] ?? 0),
+      'e-waste': (userData['scannedCountEwaste'] ?? 0),    // ADD
       'glass': (userData['scannedCountGlass'] ?? 0),
+      'medical': (userData['scannedCountMedical'] ?? 0),   // ADD
       'metal': (userData['scannedCountMetal'] ?? 0),
-      'organic': (userData['scannedCountOrganic'] ?? 0),
       'paper': (userData['scannedCountPaper'] ?? 0),
       'plastic': (userData['scannedCountPlastic'] ?? 0),
-      'trash': (userData['scannedCountTrash'] ?? 0),
 
-
+      // REMOVE:
+      // 'organic': (userData['scannedCountOrganic'] ?? 0),
+      // 'trash': (userData['scannedCountTrash'] ?? 0),
     };
 
     // Determine which field to update based on category
     String categoryField = 'currentDayScanned${_capitalizeFirst(category)}';
     String capitalized = _capitalizeFirst(category);
-    String totalCategoryField = 'totalScanned$capitalized';
-    if (category == 'organic') {
-      categoryField = 'currentDayScannedOrganic';
+
+// SPECIAL CASE for e-waste (has hyphen):
+    if (category == 'e-waste') {
+      categoryField = 'currentDayScannedEwaste';
+      capitalized = 'Ewaste';
     }
 
-    String countField = 'scannedCount${_capitalizeFirst(category)}';
+    String totalCategoryField = 'totalScanned$capitalized';
+    String countField = 'scannedCount$capitalized';
+
 
     // Check if user has reached daily cap
     bool hasReachedCap = currentPoints >= DAILY_POINTS_CAP;

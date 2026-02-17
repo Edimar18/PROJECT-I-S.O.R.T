@@ -150,17 +150,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
   double _calculateTreesPlanted(Map<String, dynamic> userData) {
     double co2Saved = 0.0;
 
-    // CO2 factors (kg saved per kg recycled)
-    // Keys match your _buildWasteCategories keys
-    co2Saved += ((userData['currentDayScannedPlastics'] ?? 0) * 1.5);   // Plastic
-    co2Saved += ((userData['currentDayScannedPaper'] ?? 0) * 3.0);      // Paper
-    co2Saved += ((userData['currentDayScannedMetal'] ?? 0) * 9.0);      // Metal (High impact!)
-    co2Saved += ((userData['currentDayScannedCardboard'] ?? 0) * 3.0);  // Cardboard
-    co2Saved += ((userData['currentDayScannedGlass'] ?? 0) * 0.3);      // Glass
-    co2Saved += ((userData['currentDayScannedOrganic'] ?? 0) * 0.2);    // Organic
+    co2Saved += ((userData['currentDayScannedPlastic'] ?? 0) * 1.5);    // Note: no 's'
+    co2Saved += ((userData['currentDayScannedPaper'] ?? 0) * 3.0);      // Keep same
+    co2Saved += ((userData['currentDayScannedMetal'] ?? 0) * 9.0);      // Keep same
+    co2Saved += ((userData['currentDayScannedCardboard'] ?? 0) * 3.0);  // Keep same
+    co2Saved += ((userData['currentDayScannedGlass'] ?? 0) * 0.3);      // Keep same
+    co2Saved += ((userData['currentDayScannedEwaste'] ?? 0) * 8.0);     // ADD - High impact!
+    co2Saved += ((userData['currentDayScannedMedical'] ?? 0) * 0.5);    // ADD - Low impact
 
     // 1 mature tree absorbs approx 21kg CO2 per year.
-    // We calculate "Yearly tree absorption equivalent"
     return co2Saved / 21.0;
   }
 
@@ -269,40 +267,40 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   Widget _buildWasteCategories(Map<String, dynamic> userData) {
     final categories = {
-      'Plastic': {
-        'icon': Icons.local_drink,
-        'value': (userData['currentDayScannedPlastics'] ?? 0).toDouble(),
-        'color': Colors.blueAccent
-      },
-      'Paper': {
-        'icon': Icons.article,
-        'value': (userData['currentDayScannedPaper'] ?? 0).toDouble(),
-        'color': Colors.greenAccent
-      },
-      'Metal': {
-        'icon': Icons.build,
-        'value': (userData['currentDayScannedMetal'] ?? 0).toDouble(),
-        'color': Colors.orangeAccent
-      },
       'Cardboard': {
         'icon': Icons.inventory_2,
         'value': (userData['currentDayScannedCardboard'] ?? 0).toDouble(),
         'color': Colors.brown
+      },
+      'E-Waste': {
+        'icon': Icons.phone_android,
+        'value': (userData['currentDayScannedEwaste'] ?? 0).toDouble(),
+        'color': Colors.purple
       },
       'Glass': {
         'icon': Icons.wine_bar,
         'value': (userData['currentDayScannedGlass'] ?? 0).toDouble(),
         'color': Colors.lightBlueAccent
       },
-      'Organic': {
-        'icon': Icons.eco,
-        'value': (userData['currentDayScannedOrganic'] ?? 0).toDouble(),
-        'color': Colors.green
+      'Medical': {
+        'icon': Icons.medical_services,
+        'value': (userData['currentDayScannedMedical'] ?? 0).toDouble(),
+        'color': Colors.red
       },
-      'Trash': {
-        'icon': Icons.delete,
-        'value': (userData['currentDayScannedTrash'] ?? 0).toDouble(),
-        'color': Colors.black54
+      'Metal': {
+        'icon': Icons.build,
+        'value': (userData['currentDayScannedMetal'] ?? 0).toDouble(),
+        'color': Colors.orangeAccent
+      },
+      'Paper': {
+        'icon': Icons.article,
+        'value': (userData['currentDayScannedPaper'] ?? 0).toDouble(),
+        'color': Colors.greenAccent
+      },
+      'Plastic': {
+        'icon': Icons.local_drink,
+        'value': (userData['currentDayScannedPlastic'] ?? 0).toDouble(),
+        'color': Colors.blueAccent
       },
     };
 
@@ -365,20 +363,27 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   Map<String, dynamic> _getCategoryIconAndColor(String category) {
     switch (category.toLowerCase()) {
-      case 'plastic':
-        return {'icon': Icons.local_drink, 'color': Colors.blueAccent};
-      case 'paper':
-        return {'icon': Icons.article, 'color': Colors.greenAccent};
-      case 'metal':
-        return {'icon': Icons.build, 'color': Colors.orangeAccent};
       case 'cardboard':
         return {'icon': Icons.inventory_2, 'color': Colors.brown};
+      case 'e-waste':                                                    // ADD
+        return {'icon': Icons.phone_android, 'color': Colors.purple};
       case 'glass':
         return {'icon': Icons.wine_bar, 'color': Colors.lightBlueAccent};
+      case 'medical':                                                    // ADD
+        return {'icon': Icons.medical_services, 'color': Colors.red};
+      case 'metal':
+        return {'icon': Icons.build, 'color': Colors.orangeAccent};
+      case 'paper':
+        return {'icon': Icons.article, 'color': Colors.greenAccent};
+      case 'plastic':
+        return {'icon': Icons.local_drink, 'color': Colors.blueAccent};
+
+    // OPTIONAL: Keep these for backward compatibility with old data
       case 'organic':
         return {'icon': Icons.eco, 'color': Colors.green};
       case 'trash':
         return {'icon': Icons.delete, 'color': Colors.black54};
+
       default:
         return {'icon': Icons.recycling, 'color': Colors.teal};
     }

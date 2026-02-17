@@ -48,34 +48,50 @@ class AuthService {
           'currentPoints': 0.0,
           'totalPoints': 0.0,
           'totalWasteScanned': 0.0,
-          'currentDayScannedPapers': 0.0,
-          'currentDayScannedPlastics': 0.0,
-          'currentDayScannedMetals': 0.0,
+
+          // Current day fields
           'currentDayScannedCardboard': 0.0,
+          'currentDayScannedEwaste': 0.0,      // ADD
           'currentDayScannedGlass': 0.0,
-          'currentDayScannedTrash': 0.0,
+          'currentDayScannedMedical': 0.0,     // ADD
+          'currentDayScannedMetal': 0.0,       // Rename from Metals
+          'currentDayScannedPaper': 0.0,       // Rename from Papers
+          'currentDayScannedPlastic': 0.0,     // Rename from Plastics
 
+          // REMOVE:
+          // 'currentDayScannedOrganic': 0.0,
+          // 'currentDayScannedTrash': 0.0,
 
-          'totalScannedPapers': 0.0,
-          'totalScannedPlastics': 0.0,
-          'totalScannedMetals': 0.0,
+          // Total scanned fields
           'totalScannedCardboard': 0.0,
+          'totalScannedEwaste': 0.0,           // ADD
           'totalScannedGlass': 0.0,
-          'totalScannedTrash': 0.0,
-          'totalScannedOrganic': 0.0,
+          'totalScannedMedical': 0.0,          // ADD
+          'totalScannedMetal': 0.0,            // Rename from Metals
+          'totalScannedPaper': 0.0,            // Rename from Papers
+          'totalScannedPlastic': 0.0,          // Rename from Plastics
+
+          // REMOVE:
+          // 'totalScannedOrganic': 0.0,
+          // 'totalScannedTrash': 0.0,
+
+          // Counts
+          'scannedCountCardboard': 0,
+          'scannedCountEwaste': 0,             // ADD
+          'scannedCountGlass': 0,
+          'scannedCountMedical': 0,            // ADD
+          'scannedCountMetal': 0,
+          'scannedCountPaper': 0,
+          'scannedCountPlastic': 0,
+
+          // REMOVE:
+          // 'scannedCountOrganic': 0,
+          // 'scannedCountTrash': 0,
 
           'todaysActivityLog': [],
           'rank': 0,
-          'currentDayScannedOrganic': 0.0,
-          'scannedCountCardboard': 0,
-          'scannedCountGlass': 0,
-          'scannedCountMetal': 0,
-          'scannedCountOrganic': 0,
-          'scannedCountPaper': 0,
-          'scannedCountPlastic': 0,
-          'scannedCountTrash': 0,
           'diversityBonusEarned': false,
-          'lastUpdate': FieldValue.serverTimestamp(), 
+          'lastUpdate': FieldValue.serverTimestamp(),
         });
       }
       return null; // Success
