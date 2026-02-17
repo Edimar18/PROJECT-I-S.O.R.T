@@ -1,11 +1,8 @@
-import '../../user/services/update_service.dart';
 import 'dart:io';
 import 'dart:typed_data';
-import 'package:flutter/services.dart';
 import 'package:tflite_flutter/tflite_flutter.dart';
 import 'package:image/image.dart' as img;
 import 'package:path_provider/path_provider.dart';
-import 'dart:io';
 
 class TrashClassifier {
   Interpreter? _interpreter;
@@ -22,9 +19,9 @@ class TrashClassifier {
   // Average weights in kg for each category
   static const Map<String, double> averageWeights = {
     'cardboard': 0.05,
-    'e-waste': 0.30,     // ADD - electronics are heavier
+    'e-waste': 0.30,
     'glass': 0.25,
-    'medical': 0.05,     // ADD - medical waste
+    'medical': 0.05,
     'metal': 0.015,
     'paper': 0.01,
     'plastic': 0.02,
@@ -34,20 +31,17 @@ class TrashClassifier {
     try {
       final options = InterpreterOptions()..threads = 4;
 
-      // Check if updated model exists
       final appDir = await getApplicationDocumentsDirectory();
-      final downloadedModelPath = '${appDir.path}/best_float16.tflite';
+      final downloadedModelPath = '${appDir.path}/best_float32.tflite';
       final downloadedModel = File(downloadedModelPath);
 
       if (await downloadedModel.exists()) {
-        // Load downloaded model
         _interpreter = await Interpreter.fromFile(
           downloadedModel,
           options: options,
         );
         print('Loaded updated model from storage');
       } else {
-        // Load bundled model from assets
         _interpreter = await Interpreter.fromAsset(
           'assets/models/best_float16.tflite',
           options: options,
@@ -67,19 +61,15 @@ class TrashClassifier {
       await loadModel();
     }
 
-    // Load and preprocess image
     final imageData = await _preprocessImage(imagePath);
 
-    // Prepare output buffer
-    final output = List.filled(1 * _labels.length, 0.0).reshape([1, _labels.length]);
+    final output =
+    List.filled(1 * _labels.length, 0.0).reshape([1, _labels.length]);
 
-    // Run inference
     _interpreter!.run(imageData, output);
 
-    // Get results
     final predictions = output[0] as List<double>;
 
-    // Find the index with highest confidence
     int maxIndex = 0;
     double maxConfidence = predictions[0];
 
@@ -102,7 +92,6 @@ class TrashClassifier {
   }
 
   Future<Uint8List> _preprocessImage(String imagePath) async {
-    // Read image file
     final imageBytes = await File(imagePath).readAsBytes();
     img.Image? image = img.decodeImage(imageBytes);
 
@@ -110,30 +99,41 @@ class TrashClassifier {
       throw Exception('Failed to decode image');
     }
 
-    // // Resize to 224x224 (YOLOv8-cls default)
-    img.Image resizedImage = img.copyResize(image, width: 224, height: 224);
+    // ✅ FIX 1: Correct EXIF orientation.
+    // Android cameras often write photos rotated 90° in the file but store
+    // the correct orientation in EXIF metadata. Without this, the model sees
+    // a sideways image that never appeared in training data.
+    image = img.bakeOrientation(image);
 
-    // Convert to Float32List with pixel values 0-255 (not normalized)
-    final imageMatrix = List.generate(
-      224,
-          (y) => List.generate(
-        224,
-            (x) {
-          final pixel = resizedImage.getPixel(x, y);
-          return [
-            pixel.r.toDouble() / 255.0,  // ✅ Normalize to 0-1
-            pixel.g.toDouble() / 255.0,  // ✅ Normalize to 0-1
-            pixel.b.toDouble() / 255.0,  // ✅ Normalize to 0-1
-          ];
-        },
-      ),
+    // ✅ FIX 2: Center-crop to a square BEFORE resizing.
+    // A 9:16 photo resized directly to 224×224 squishes/stretches everything.
+    // Center-cropping first keeps aspect ratio intact — matching how the
+    // training dataset images were likely preprocessed (same as YOLOv8-cls
+    // default: center crop then resize).
+    final cropSize = image.width < image.height ? image.width : image.height;
+    final cropX = (image.width - cropSize) ~/ 2;
+    final cropY = (image.height - cropSize) ~/ 2;
+
+    final cropped = img.copyCrop(
+      image,
+      x: cropX,
+      y: cropY,
+      width: cropSize,
+      height: cropSize,
     );
 
-    // Flatten to 1D array and convert to Float32List
+    // ✅ FIX 3: Resize the square crop to 224×224 (no distortion now)
+    final resized = img.copyResize(cropped, width: 224, height: 224,
+        interpolation: img.Interpolation.linear);
+
+    // ✅ Normalize pixels to [0, 1] — matches YOLOv8 training pipeline
     final inputList = <double>[];
-    for (var row in imageMatrix) {
-      for (var pixel in row) {
-        inputList.addAll(pixel);
+    for (int y = 0; y < 224; y++) {
+      for (int x = 0; x < 224; x++) {
+        final pixel = resized.getPixel(x, y);
+        inputList.add(pixel.r.toDouble() / 255.0);
+        inputList.add(pixel.g.toDouble() / 255.0);
+        inputList.add(pixel.b.toDouble() / 255.0);
       }
     }
 
