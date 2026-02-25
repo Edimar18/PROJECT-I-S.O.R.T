@@ -32,13 +32,23 @@ class _ScanScreenState extends State<ScanScreen>
   final TrashClassifier _classifier = TrashClassifier();
   final UserService _userService = UserService();
 
+  // All supported categories
+  static const List<String> _allCategories = [
+    'cardboard',
+    'e-waste',
+    'glass',
+    'medical',
+    'metal',
+    'paper',
+    'plastic',
+  ];
+
   @override
   void initState() {
     super.initState();
     _initializeControllerFuture = _initializeCamera();
     _loadModel();
 
-    // Setup scan line animation
     _scanLineController = AnimationController(
       duration: const Duration(seconds: 2),
       vsync: this,
@@ -141,138 +151,346 @@ class _ScanScreenState extends State<ScanScreen>
     }
   }
 
+  // ─── Detection dialog (stateful via StatefulBuilder) ──────────────────────
   void _showDetectionDialog(
-      String category, double confidence, double weight) {
-    final isRecyclable = _isRecyclable(category);
-    final displayName = _getDisplayName(category);
-    final typeDescription = _getTypeDescription(category);
-    final randomFact = _getRandomFact(category);
-
+      String initialCategory, double confidence, double weight) {
     showDialog(
       context: context,
       barrierDismissible: false,
       builder: (BuildContext context) {
-        return Dialog(
-          backgroundColor: Colors.white.withValues(alpha: 0.95),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.all(20.0),
-            child: SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      _buildTrashIcon(category),
-                      const Chip(
-                        label: Text('+1 pt'),
-                        backgroundColor: Colors.teal,
-                        labelStyle: TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 15),
-                  Text(
-                    displayName,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 22,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 8),
-                  const Text(
-                    'OBJECT IDENTIFIED',
-                    style: TextStyle(
-                      color: Colors.teal,
-                      fontWeight: FontWeight.bold,
-                      letterSpacing: 1.5,
-                      fontSize: 12,
-                    ),
-                  ),
-                  const SizedBox(height: 5),
-                  Text(
-                    'Confidence: ${(confidence * 100).toStringAsFixed(1)}%',
-                    style: const TextStyle(
-                      color: Colors.black54,
-                      fontSize: 12,
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [
-                      _buildInfoChip('TYPE', typeDescription),
-                      _buildInfoChip('RECYCLABLE', isRecyclable ? 'Yes' : 'No',
-                          isRecyclable: isRecyclable),
-                    ],
-                  ),
-                  const SizedBox(height: 20),
-                  Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: Colors.blue.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(15),
-                    ),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Icon(Icons.info_outline,
-                            color: Colors.blue, size: 24),
-                        const SizedBox(width: 10),
-                        Expanded(
-                          child: LayoutBuilder(
-                            builder: (context, constraints) {
-                              double fontSize = 13;
-                              if (randomFact.length > 150) {
-                                fontSize = 11;
-                              } else if (randomFact.length > 100) {
-                                fontSize = 12;
-                              }
-                              return Text(
-                                randomFact,
-                                style: TextStyle(fontSize: fontSize, height: 1.4),
-                              );
-                            },
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 25),
-                  ElevatedButton.icon(
-                    onPressed: () {
-                      Navigator.of(context).pop();
-                      setState(() {
-                        _capturedImage = null;
-                      });
-                    },
-                    icon: const Icon(Icons.refresh),
-                    label: const Text('Scan Again'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.teal,
-                      foregroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(30),
-                      ),
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 60, vertical: 15),
-                    ),
-                  ),
-                ],
+        // Local mutable state for the dialog
+        String currentCategory = initialCategory;
+        String currentFact = _getRandomFact(initialCategory);
+        bool corrected = false;
+
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            final isRecyclable = _isRecyclable(currentCategory);
+            final displayName = _getDisplayName(currentCategory);
+            final typeDescription = _getTypeDescription(currentCategory);
+
+            return Dialog(
+              backgroundColor: Colors.white.withValues(alpha: 0.95),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20),
               ),
-            ),
+              child: Padding(
+                padding: const EdgeInsets.all(20.0),
+                child: SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      // ── Header row: icon + points chip ──
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          _buildTrashIcon(currentCategory),
+                          const Chip(
+                            label: Text('+1 pt'),
+                            backgroundColor: Colors.teal,
+                            labelStyle: TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 15),
+
+                      // ── Label row with "corrected" badge ──
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            displayName,
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 22,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                          if (corrected) ...[
+                            const SizedBox(width: 8),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 8, vertical: 3),
+                              decoration: BoxDecoration(
+                                color: Colors.orange.withValues(alpha: 0.15),
+                                borderRadius: BorderRadius.circular(20),
+                                border: Border.all(
+                                    color: Colors.orange.shade300, width: 1),
+                              ),
+                              child: const Text(
+                                'Corrected',
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  color: Colors.orange,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+
+                      const Text(
+                        'OBJECT IDENTIFIED',
+                        style: TextStyle(
+                          color: Colors.teal,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 1.5,
+                          fontSize: 12,
+                        ),
+                      ),
+                      const SizedBox(height: 5),
+                      Text(
+                        corrected
+                            ? 'Manually corrected'
+                            : 'Confidence: ${(confidence * 100).toStringAsFixed(1)}%',
+                        style: TextStyle(
+                          color: corrected ? Colors.orange : Colors.black54,
+                          fontSize: 12,
+                          fontStyle: corrected
+                              ? FontStyle.italic
+                              : FontStyle.normal,
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+
+                      // ── Type + recyclable chips ──
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        children: [
+                          _buildInfoChip('TYPE', typeDescription),
+                          _buildInfoChip(
+                            'RECYCLABLE',
+                            isRecyclable ? 'Yes' : 'No',
+                            isRecyclable: isRecyclable,
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 20),
+
+                      // ── Fun fact box ──
+                      Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: Colors.blue.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(15),
+                        ),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Icon(Icons.info_outline,
+                                color: Colors.blue, size: 24),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: LayoutBuilder(
+                                builder: (context, constraints) {
+                                  double fontSize = 13;
+                                  if (currentFact.length > 150) {
+                                    fontSize = 11;
+                                  } else if (currentFact.length > 100) {
+                                    fontSize = 12;
+                                  }
+                                  return Text(
+                                    currentFact,
+                                    style: TextStyle(
+                                        fontSize: fontSize, height: 1.4),
+                                  );
+                                },
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+
+                      // ── "Wrong prediction?" correction button ──
+                      OutlinedButton.icon(
+                        onPressed: () {
+                          _showCategoryPicker(
+                            context,
+                            currentCategory,
+                            onSelected: (newCategory) {
+                              setDialogState(() {
+                                currentCategory = newCategory;
+                                currentFact = _getRandomFact(newCategory);
+                                corrected = true;
+                              });
+                            },
+                          );
+                        },
+                        icon: const Icon(Icons.edit_outlined, size: 16),
+                        label: const Text('Wrong prediction? Correct it'),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: Colors.grey.shade700,
+                          side: BorderSide(color: Colors.grey.shade400),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(30),
+                          ),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 20, vertical: 10),
+                          textStyle: const TextStyle(fontSize: 13),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+
+                      // ── Scan Again button ──
+                      ElevatedButton.icon(
+                        onPressed: () {
+                          Navigator.of(context).pop();
+                          setState(() {
+                            _capturedImage = null;
+                          });
+                        },
+                        icon: const Icon(Icons.refresh),
+                        label: const Text('Scan Again'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.teal,
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(30),
+                          ),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 60, vertical: 15),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  // ─── Bottom sheet category picker ─────────────────────────────────────────
+  void _showCategoryPicker(
+      BuildContext context,
+      String currentCategory, {
+        required ValueChanged<String> onSelected,
+      }) {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (ctx) {
+        return Padding(
+          padding: const EdgeInsets.fromLTRB(20, 16, 20, 32),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Handle bar
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade300,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              const Text(
+                'Select the correct category',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                'Help us improve by picking the right trash type.',
+                style: TextStyle(fontSize: 13, color: Colors.grey.shade600),
+              ),
+              const SizedBox(height: 16),
+              Wrap(
+                spacing: 10,
+                runSpacing: 10,
+                children: _allCategories.map((cat) {
+                  final isSelected = cat == currentCategory;
+                  return GestureDetector(
+                    onTap: () {
+                      Navigator.of(ctx).pop();
+                      onSelected(cat);
+                    },
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 200),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 10),
+                      decoration: BoxDecoration(
+                        color: isSelected
+                            ? Colors.teal
+                            : Colors.grey.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(30),
+                        border: Border.all(
+                          color:
+                          isSelected ? Colors.teal : Colors.grey.shade300,
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            _getCategoryIcon(cat),
+                            size: 18,
+                            color: isSelected
+                                ? Colors.white
+                                : Colors.grey.shade700,
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            _getDisplayName(cat),
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w500,
+                              color: isSelected
+                                  ? Colors.white
+                                  : Colors.grey.shade800,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                }).toList(),
+              ),
+            ],
           ),
         );
       },
     );
+  }
+
+  // ─── Helpers ──────────────────────────────────────────────────────────────
+
+  IconData _getCategoryIcon(String category) {
+    switch (category.toLowerCase()) {
+      case 'cardboard':
+        return Icons.inventory_2_outlined;
+      case 'e-waste':
+        return Icons.phone_android_outlined;
+      case 'glass':
+        return Icons.wine_bar_outlined;
+      case 'medical':
+        return Icons.medical_services_outlined;
+      case 'metal':
+        return Icons.settings_input_component_outlined;
+      case 'paper':
+        return Icons.article_outlined;
+      case 'plastic':
+        return Icons.local_drink_outlined;
+      default:
+        return Icons.help_outline;
+    }
   }
 
   String _getDisplayName(String category) {
@@ -338,39 +556,13 @@ class _ScanScreenState extends State<ScanScreen>
   }
 
   Widget _buildTrashIcon(String type) {
-    IconData iconData;
-    switch (type.toLowerCase()) {
-      case 'cardboard':
-        iconData = Icons.inventory_2_outlined;
-        break;
-      case 'e-waste':
-        iconData = Icons.phone_android_outlined;
-        break;
-      case 'glass':
-        iconData = Icons.wine_bar_outlined;
-        break;
-      case 'medical':
-        iconData = Icons.medical_services_outlined;
-        break;
-      case 'metal':
-        iconData = Icons.settings_input_component_outlined;
-        break;
-      case 'paper':
-        iconData = Icons.article_outlined;
-        break;
-      case 'plastic':
-        iconData = Icons.local_drink_outlined;
-        break;
-      default:
-        iconData = Icons.help_outline;
-    }
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: Colors.teal.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(15),
       ),
-      child: Icon(iconData, color: Colors.teal, size: 35),
+      child: Icon(_getCategoryIcon(type), color: Colors.teal, size: 35),
     );
   }
 
@@ -425,19 +617,10 @@ class _ScanScreenState extends State<ScanScreen>
     );
   }
 
-  // ─────────────────────────────────────────────────────────────
-  // Square crop-guide overlay.
-  //
-  // The teal square shows EXACTLY what gets sent to the model:
-  // a center-square crop of the camera frame, matching the
-  // center-crop logic in TrashClassifier._preprocessImage().
-  //
-  // Corner brackets give a cleaner look than a full square outline.
-  // The animated scan line reinforces "this area is being analysed."
-  // ─────────────────────────────────────────────────────────────
+  // ─── Crop guide & dim overlay (unchanged) ─────────────────────────────────
+
   Widget _buildCropGuide(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
-    // Use 75% of screen width for the guide box — leaves comfortable margins
     final boxSize = screenWidth * 0.75;
     const cornerLen = 28.0;
     const cornerThickness = 4.0;
@@ -449,8 +632,6 @@ class _ScanScreenState extends State<ScanScreen>
         height: boxSize,
         child: Stack(
           children: [
-            // Dark overlay outside the box is handled by the outer Stack layers.
-            // Animated scan line inside the box
             AnimatedBuilder(
               animation: _scanLineAnimation,
               builder: (_, __) {
@@ -473,8 +654,6 @@ class _ScanScreenState extends State<ScanScreen>
                 );
               },
             ),
-
-            // ── Top-left corner ──
             Positioned(
               top: 0,
               left: 0,
@@ -484,7 +663,6 @@ class _ScanScreenState extends State<ScanScreen>
                   thickness: cornerThickness,
                   radius: cornerRadius),
             ),
-            // ── Top-right corner ──
             Positioned(
               top: 0,
               right: 0,
@@ -494,7 +672,6 @@ class _ScanScreenState extends State<ScanScreen>
                   thickness: cornerThickness,
                   radius: cornerRadius),
             ),
-            // ── Bottom-left corner ──
             Positioned(
               bottom: 0,
               left: 0,
@@ -504,7 +681,6 @@ class _ScanScreenState extends State<ScanScreen>
                   thickness: cornerThickness,
                   radius: cornerRadius),
             ),
-            // ── Bottom-right corner ──
             Positioned(
               bottom: 0,
               right: 0,
@@ -543,18 +719,15 @@ class _ScanScreenState extends State<ScanScreen>
     );
   }
 
-  // Dim overlay: covers everything outside the crop guide square
   Widget _buildDimOverlay(BuildContext context) {
     final screenSize = MediaQuery.of(context).size;
     final boxSize = screenSize.width * 0.75;
     final sideMargin = (screenSize.width - boxSize) / 2;
-    // Vertically centre the box in the camera area (exclude bottom controls)
     final cameraAreaHeight = screenSize.height - 160;
-    final topMargin = (cameraAreaHeight - boxSize) / 2 + 80; // +80 for title
+    final topMargin = (cameraAreaHeight - boxSize) / 2 + 80;
 
     return Stack(
       children: [
-        // Top dim
         Positioned(
           top: 0,
           left: 0,
@@ -562,7 +735,6 @@ class _ScanScreenState extends State<ScanScreen>
           height: topMargin,
           child: Container(color: Colors.black.withValues(alpha: 0.55)),
         ),
-        // Bottom dim
         Positioned(
           top: topMargin + boxSize,
           left: 0,
@@ -570,7 +742,6 @@ class _ScanScreenState extends State<ScanScreen>
           bottom: 0,
           child: Container(color: Colors.black.withValues(alpha: 0.55)),
         ),
-        // Left dim
         Positioned(
           top: topMargin,
           left: 0,
@@ -578,7 +749,6 @@ class _ScanScreenState extends State<ScanScreen>
           height: boxSize,
           child: Container(color: Colors.black.withValues(alpha: 0.55)),
         ),
-        // Right dim
         Positioned(
           top: topMargin,
           right: 0,
@@ -586,13 +756,11 @@ class _ScanScreenState extends State<ScanScreen>
           height: boxSize,
           child: Container(color: Colors.black.withValues(alpha: 0.55)),
         ),
-        // Crop guide corners + scan line, centred in the clear area
         Positioned(
           top: topMargin,
           left: sideMargin,
           child: _buildCropGuide(context),
         ),
-        // Helper label just below the box
         Positioned(
           top: topMargin + boxSize + 10,
           left: 0,
@@ -605,7 +773,10 @@ class _ScanScreenState extends State<ScanScreen>
               fontSize: 13,
               letterSpacing: 0.5,
               shadows: [
-                Shadow(blurRadius: 6, color: Colors.black54, offset: Offset(1, 1))
+                Shadow(
+                    blurRadius: 6,
+                    color: Colors.black54,
+                    offset: Offset(1, 1))
               ],
             ),
           ),
@@ -613,6 +784,8 @@ class _ScanScreenState extends State<ScanScreen>
       ],
     );
   }
+
+  // ─── Build ────────────────────────────────────────────────────────────────
 
   @override
   Widget build(BuildContext context) {
@@ -625,7 +798,6 @@ class _ScanScreenState extends State<ScanScreen>
             if (_controller != null && _controller!.value.isInitialized) {
               return Stack(
                 children: [
-                  // ── Camera preview or captured image ──
                   _capturedImage == null
                       ? SizedBox.expand(
                     child: CameraPreview(_controller!),
@@ -637,11 +809,9 @@ class _ScanScreenState extends State<ScanScreen>
                     ),
                   ),
 
-                  // ── Dim overlay + crop guide (only when live, not processing) ──
                   if (_capturedImage == null && !_isProcessing)
                     _buildDimOverlay(context),
 
-                  // ── Processing overlay ──
                   if (_isProcessing)
                     Container(
                       color: Colors.black54,
@@ -667,7 +837,6 @@ class _ScanScreenState extends State<ScanScreen>
                       ),
                     ),
 
-                  // ── Close button ──
                   Positioned(
                     top: 50,
                     left: 20,
@@ -682,7 +851,6 @@ class _ScanScreenState extends State<ScanScreen>
                     ),
                   ),
 
-                  // ── Flash toggle ──
                   if (_capturedImage == null)
                     Positioned(
                       top: 50,
@@ -699,7 +867,6 @@ class _ScanScreenState extends State<ScanScreen>
                       ),
                     ),
 
-                  // ── Title ──
                   Positioned(
                     top: 90,
                     left: 0,
@@ -753,7 +920,6 @@ class _ScanScreenState extends State<ScanScreen>
                     ),
                   ),
 
-                  // ── Capture button ──
                   if (_capturedImage == null && !_isProcessing)
                     Positioned(
                       bottom: 50,
@@ -791,7 +957,8 @@ class _ScanScreenState extends State<ScanScreen>
                               Border.all(color: Colors.white, width: 6),
                               boxShadow: [
                                 BoxShadow(
-                                  color: Colors.black.withValues(alpha: 0.3),
+                                  color:
+                                  Colors.black.withValues(alpha: 0.3),
                                   blurRadius: 10,
                                   spreadRadius: 2,
                                 ),
